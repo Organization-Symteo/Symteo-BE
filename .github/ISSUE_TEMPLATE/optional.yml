@@ -1,0 +1,17 @@
+name: "📝 기타 요청 사항 (Task)"
+description: 기능 구현이나 버그 외의 단순 작업/수정 요청입니다.
+title: "[task] "
+labels: ["task"]
+body:
+  - type: textarea
+    id: task_desc
+    attributes:
+      label: "📝 작업 설명"
+      placeholder: 수행해야 할 작업을 자유롭게 작성해주세요.
+    validations:
+      required: true
+  - type: textarea
+    id: reference
+    attributes:
+      label: "🔗 관련 내용 or 참고 링크"
+      placeholder: "ex) 노션 링크, Figma 주소, 관련 이슈 #24 등"
