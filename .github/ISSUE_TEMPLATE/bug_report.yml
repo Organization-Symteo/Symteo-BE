@@ -1,4 +1,4 @@
-  name: "🛑 Bug Report"
+  name: "🐛 Bug Report"
   description: 서비스의 오류를 보고합니다.
   title: "[fix] "
   labels: ["bug"]
@@ -6,7 +6,7 @@
     - type: textarea
       id: bug_desc
       attributes:
-        label: "🛑 어떤 버그인가요?"
+        label: "🐛 어떤 버그인가요?"
         placeholder: 발생한 상황에 대해 간결하게 설명해주세요.
       validations:
         required: true
