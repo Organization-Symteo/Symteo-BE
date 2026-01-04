@@ -13,5 +13,5 @@ body:
   - type: textarea
     id: tasks
     attributes:
-      label: "🛠️ 작업 내용"
+      label: "🏷️️ 작업 내용"
       placeholder: "- [ ] 작업 내용 1\n- [ ] 작업 내용 2"
