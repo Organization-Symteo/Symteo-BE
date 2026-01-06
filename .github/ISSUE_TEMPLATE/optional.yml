@@ -6,7 +6,7 @@ body:
   - type: textarea
     id: task_desc
     attributes:
-      label: "📝 작업 설명"
+      label: "📝 작업 설명" 
       placeholder: 수행해야 할 작업을 자유롭게 작성해주세요.
     validations:
       required: true
