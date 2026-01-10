@@ -1,0 +1,67 @@
+package com.symteo.domain.user.entity;
+
+import com.symteo.domain.user.enums.Role;
+import com.symteo.domain.user.enums.SocialType;
+import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+import jakarta.persistence.Id;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(name = "Users")
+public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "users_id") // ERD의 PK 컬럼명 반영
+    private Long id;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "social_type", nullable = false, length = 20)
+    private SocialType socialType;
+
+    @Column(name = "social_id", nullable = false)
+    private String socialId;
+
+    @Column(name = "email")
+    private String email;
+
+    @Column(name = "nickname", length = 10)
+    private String nickname;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false, length = 20)
+    private Role role;
+
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @Builder
+    public User(SocialType socialType, String socialId, com.symteo.domain.user.enums.Role role) {
+        this.socialType = socialType;
+        this.socialId = socialId;
+        this.role = role;
+    }
+
+    // 닉네임 설정 메서드 (가입 완료 시 사용)
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
+        this.role = Role.USER; // 정회원 승격
+    }
+
+}

@@ -64,7 +64,7 @@ CREATE TABLE `Settings` (
                             CONSTRAINT `FK_Users_TO_Settings` FOREIGN KEY (`users_id`) REFERENCES `Users` (`users_id`)
 );
 
-CREATE TABLE `UserTokens` (
+CREATE TABLE `User_Tokens` (
                               `token_id` BIGINT NOT NULL AUTO_INCREMENT,
                               `user_id` BIGINT NOT NULL,
                               `refresh_token` VARCHAR(512) NOT NULL,
