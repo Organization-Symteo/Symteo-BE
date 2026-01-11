@@ -5,6 +5,12 @@ spring:
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
+#  datasource:
+#    url: ${DB_URL}
+#    username: ${DB_USERNAME}
+#    password: ${DB_PASSWORD}
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+
   jpa:
     hibernate:
       ddl-auto: none
@@ -22,6 +28,17 @@ spring:
     validate-on-migrate: false
     out-of-order: false
     clean-disabled: true
+
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      chat:
+        options:
+          model: gpt-4o
+          temperature: 0.7
+          max-tokens: 1000
+    retry:
+      max-attempts: 3
 
 oauth:
   google:

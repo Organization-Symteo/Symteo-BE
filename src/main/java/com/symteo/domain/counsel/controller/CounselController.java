@@ -2,6 +2,7 @@ package com.symteo.domain.counsel.controller;
 
 import com.symteo.domain.counsel.dto.req.CounselReqDTO;
 import com.symteo.domain.counsel.dto.res.CounselResDTO;
+import com.symteo.domain.counsel.service.CounselQueryService;
 import com.symteo.global.ApiPayload.ApiResponse;
 import com.symteo.global.ApiPayload.status.SuccessStatus;
 import lombok.RequiredArgsConstructor;
@@ -10,14 +11,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/counsel")
+@RequestMapping("/api/counsel")
 @RequiredArgsConstructor
 public class CounselController {
 
-    @GetMapping("")
-    public ApiResponse<CounselResDTO.AskDTO> askAI(
-            CounselReqDTO.AskDTO dto
+    private final CounselQueryService counselQueryService;
+
+    @GetMapping("/upload")
+    public ApiResponse<CounselResDTO.askAiDTO> askAI(
+            CounselReqDTO.askAiDTO dto
     ){
-        return null; //ApiResponse.onSuccess(SuccessStatus._OK.getCode(), SuccessStatus._OK.getMessage(), );
+        return ApiResponse.onSuccess(counselQueryService.createCounsel(dto));
     }
 }

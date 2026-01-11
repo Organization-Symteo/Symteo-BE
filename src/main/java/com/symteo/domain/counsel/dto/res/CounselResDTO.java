@@ -1,7 +1,12 @@
 package com.symteo.domain.counsel.dto.res;
 
-public class CounselResDTO {
-    public record AskDTO(
+import lombok.Builder;
 
+public class CounselResDTO {
+
+    // Converter DTO 생성을 위한 Builder
+    @Builder
+    public record askAiDTO(
+            String text
     ){}
 }

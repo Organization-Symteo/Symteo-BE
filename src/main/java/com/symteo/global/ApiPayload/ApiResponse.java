@@ -1,6 +1,7 @@
 package com.symteo.global.ApiPayload;
 
 
+import com.symteo.domain.counsel.dto.res.CounselResDTO;
 import com.symteo.global.ApiPayload.code.BaseCode;
 import com.symteo.global.ApiPayload.status.SuccessStatus;
 import com.fasterxml.jackson.annotation.JsonInclude;

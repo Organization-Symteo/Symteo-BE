@@ -37,7 +37,7 @@ public class SecurityConfig {
                         // (1) Swagger 및 인증 관련 API는 모두 허용
                         .requestMatchers(
                                 "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html",
-                                "/api/v1/auth/**", "/error", "/favicon.ico"
+                                "/api/v1/auth/**", "/error", "/favicon.ico", "/api/counsel/**"
                         ).permitAll()
 
                         // (2) 그 외 모든 요청은 인증 필요
