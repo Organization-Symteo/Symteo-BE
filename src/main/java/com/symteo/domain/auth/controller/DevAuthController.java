@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-//swagger에서 임시 토큰 발급을 위한 파일
+//swagger 테스트 시에 사용할 임시 토큰 발급을 위한 파일이므로 후에 삭제 예정
 @RestController
 @RequestMapping("/api/v1/dev")
 @RequiredArgsConstructor
@@ -33,7 +33,7 @@ public class DevAuthController {
                 refreshToken,
                 false,          // isNewMember: 개발용이니까 그냥 false(기존회원)로 고정
                 userId,         // userId
-                "Developer"     // nickname: 개발자용 임의 닉네임
+                "Developer"     // nickname: 임의 닉네임
         );
 
         return ResponseEntity.ok(response);
