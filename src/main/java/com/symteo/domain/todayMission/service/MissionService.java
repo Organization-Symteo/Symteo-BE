@@ -44,5 +44,41 @@ public class MissionService {
                 .build();
     }
 
+    // 오늘의 미션 제출 시작 api
+    public UserMissionStartResponse startMission(Long missionId, User user) {
+
+        Missions mission = missionRepository.findById(missionId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus._MISSION_NOT_FOUND));
+
+        // 만료 체크
+        if (LocalDateTime.now().isAfter(mission.getDeadLine())) {
+            throw new GeneralException(ErrorStatus._MISSION_EXPIRED);
+        }
+
+        // 이미 시작한 미션이면 재사용
+        UserMissions userMission = userMissionRepository
+                .findByUserAndMissions(user, mission)
+                .orElseGet(() ->
+                        userMissionRepository.save(
+                                UserMissions.builder()
+                                        .user(user)
+                                        .missions(mission)
+                                        .build()
+                        )
+                );
+
+        long remainingSeconds = Duration.between(
+                LocalDateTime.now(),
+                mission.getDeadLine()
+        ).getSeconds();
+
+        return UserMissionStartResponse.builder()
+                .userMissionId(userMission.getUserMissionId())
+                .isDrafted(userMission.isDrafted())
+                .isCompleted(userMission.isCompleted())
+                .remainingSeconds(Math.max(remainingSeconds, 0))
+                .build();
+    }
+
 
 }

@@ -27,5 +27,17 @@ public class MissionController {
         );
     }
 
+    // 오늘의 미션 제출 시작
+    @PostMapping("/{missionId}/start/{userId}")
+    public ApiResponse<UserMissionStartResponse> startMission(
+            @PathVariable Long missionId,
+            @PathVariable Long userId
+    ) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus._MEMBER_NOT_FOUND));
 
+        return ApiResponse.onSuccess(
+                missionService.startMission(missionId, user)
+        );
+    }
 }

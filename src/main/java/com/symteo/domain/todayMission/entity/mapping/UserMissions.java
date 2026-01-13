@@ -18,6 +18,7 @@ public class UserMissions {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "u_mission_id", nullable = false)
     private Long userMissionId;
 
     @ManyToOne(fetch = FetchType.LAZY)
