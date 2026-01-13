@@ -1,5 +1,7 @@
 package com.symteo.domain.todayMission.controller;
 
+import com.symteo.domain.todayMission.dto.DraftSaveRequest;
+import com.symteo.domain.todayMission.dto.DraftSaveResponse;
 import com.symteo.domain.todayMission.dto.MissionResponse;
 import com.symteo.domain.todayMission.dto.UserMissionStartResponse;
 import com.symteo.domain.todayMission.service.MissionService;
@@ -40,4 +42,16 @@ public class MissionController {
                 missionService.startMission(missionId, user)
         );
     }
+
+    // 오늘의 미션 임시저장
+    @PostMapping("/{userMissionId}/draft")
+    public ApiResponse<DraftSaveResponse> saveDraft(
+            @PathVariable Long userMissionId,
+            @RequestBody DraftSaveRequest request
+    ) {
+        return ApiResponse.onSuccess(
+                missionService.saveDraft(userMissionId, request.getContents())
+        );
+    }
+
 }

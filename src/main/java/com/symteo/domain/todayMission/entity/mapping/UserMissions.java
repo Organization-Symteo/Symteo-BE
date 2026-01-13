@@ -44,4 +44,9 @@ public class UserMissions {
         this.isCompleted = false;
         this.isDrafted = false;
     }
+
+    public void markDrafted() {
+        this.isDrafted = true;
+    }
+
 }
