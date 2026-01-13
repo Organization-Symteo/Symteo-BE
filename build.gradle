@@ -23,6 +23,7 @@ configurations {
 
 repositories {
 	mavenCentral()
+	maven { url 'https://repo.spring.io/milestone' }
 }
 
 dependencies {
@@ -60,6 +61,10 @@ dependencies {
     // Java 17+ 환경에서 JWT 0.9.1 실행 시 필수 (없으면 로그인 에러)
     implementation 'javax.xml.bind:jaxb-api:2.3.1'
     implementation 'org.glassfish.jaxb:jaxb-runtime:2.3.1'
+
+	// Spring AI
+	implementation platform("org.springframework.ai:spring-ai-bom:1.0.0-M5")
+	implementation 'org.springframework.ai:spring-ai-openai-spring-boot-starter'
 }
 
 tasks.named('test') {
