@@ -11,18 +11,18 @@ import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-
-@Configuration
-@OpenAPIDefinition(
-        info = @io.swagger.v3.oas.annotations.info.Info(title = "Symteo API", version = "v1"),
-        security = @SecurityRequirement(name = "bearerAuth")
-)
-@SecurityScheme(
-        name = "bearerAuth",
-        type = SecuritySchemeType.HTTP,
-        scheme = "bearer",
-        bearerFormat = "JWT"
-)
+// DevAuthController 관련 내용이므로
+//@Configuration
+//@OpenAPIDefinition(
+//        info = @io.swagger.v3.oas.annotations.info.Info(title = "Symteo API", version = "v1"),
+ //       security = @SecurityRequirement(name = "bearerAuth")
+//)
+//@SecurityScheme(
+//name = "bearerAuth",
+//        type = SecuritySchemeType.HTTP,
+//        scheme = "bearer",
+ //       bearerFormat = "JWT"
+//)
 public class SwaggerConfig {
 
     @Bean
