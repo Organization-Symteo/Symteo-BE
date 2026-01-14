@@ -1,7 +1,9 @@
 package com.symteo.domain.counsel.dto.req;
 
 public class CounselReqDTO {
-    public record askAiDTO(
-        String text
+
+    public record ChatMessage(
+            Long userId,
+            String text
     ){}
 }

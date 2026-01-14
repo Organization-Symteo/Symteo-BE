@@ -6,7 +6,7 @@ public class CounselResDTO {
 
     // Converter DTO 생성을 위한 Builder
     @Builder
-    public record askAiDTO(
+    public record ChatMessage(
             String text
     ){}
 }
