@@ -40,6 +40,9 @@ public class SecurityConfig {
                                 "/api/v1/auth/**", "/error", "/favicon.ico", "/api/counsel/**"
                         ).permitAll()
 
+                        // DevAuthController 관련 내용이므로 이후 삭제 에정(개발용 로그인 경로는 프리패스 허용)
+                        .requestMatchers("/api/v1/dev/**").permitAll()
+
                         // (2) 그 외 모든 요청은 인증 필요
                         .anyRequest().authenticated()
                 )
