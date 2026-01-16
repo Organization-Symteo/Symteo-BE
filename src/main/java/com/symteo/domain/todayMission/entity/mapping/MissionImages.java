@@ -1,6 +1,7 @@
 package com.symteo.domain.todayMission.entity.mapping;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -21,4 +22,10 @@ public class MissionImages {
 
     @Column(name = "image_url", columnDefinition = "TEXT", nullable = false)
     private String imageUrl;
+
+    @Builder
+    public MissionImages(UserMissions userMissions, String imageUrl) {
+        this.userMissions = userMissions;
+        this.imageUrl = imageUrl;
+    }
 }

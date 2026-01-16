@@ -1,9 +1,6 @@
 package com.symteo.domain.todayMission.controller;
 
-import com.symteo.domain.todayMission.dto.DraftSaveRequest;
-import com.symteo.domain.todayMission.dto.DraftSaveResponse;
-import com.symteo.domain.todayMission.dto.MissionResponse;
-import com.symteo.domain.todayMission.dto.UserMissionStartResponse;
+import com.symteo.domain.todayMission.dto.*;
 import com.symteo.domain.todayMission.service.MissionService;
 import com.symteo.domain.user.entity.User;
 import com.symteo.domain.user.repository.UserRepository;
@@ -55,6 +52,18 @@ public class MissionController {
     ) {
         return ApiResponse.onSuccess(
                 missionService.saveDraft(userMissionId, userId, request.getContents())
+        );
+    }
+
+    // 오늘의 미션 이미지 추가
+    @PostMapping("/{userMissionId}/image")
+    public ApiResponse<ImageSaveResponse> saveimage(
+            @PathVariable Long userMissionId,
+            @AuthenticationPrincipal Long userId,
+            @RequestBody ImageSaveRequest request
+    ) {
+    return ApiResponse.onSuccess(
+            missionService.saveImage(userMissionId, userId, request.getImageUrl())
         );
     }
 }
