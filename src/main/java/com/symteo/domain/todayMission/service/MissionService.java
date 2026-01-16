@@ -28,7 +28,7 @@ public class MissionService {
     private final DraftRepository draftRepository;
 
     // 오늘의 미션 조회 api
-    public MissionResponse getTodayMission() {
+    public MissionResponse getTodayMission(Long userId) {
 
         LocalDateTime startOfToday = LocalDateTime.now().toLocalDate().atStartOfDay();
         LocalDateTime endOfToday = startOfToday.plusDays(1);
@@ -87,8 +87,8 @@ public class MissionService {
 
     // 오늘의 미션 임시저장 api
     @Transactional
-    public DraftSaveResponse saveDraft(Long userMissionId, String contents) {
-        // 내용이 없는 경우 저장하지 않음
+    public DraftSaveResponse saveDraft(Long userMissionId, Long userId, String contents) {
+
         if (contents == null || contents.isBlank()) {
             return DraftSaveResponse.builder()
                     .isDrafted(false)
@@ -98,23 +98,25 @@ public class MissionService {
         UserMissions userMission = userMissionRepository.findById(userMissionId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus._USER_MISSION_NOT_FOUND));
 
-        // 기존 draft 조회 - 임시 저장 여부 조회
+        // 사용자 검증 (인증)
+        if (!userMission.getUser().getId().equals(userId)) {
+            throw new GeneralException(ErrorStatus._FORBIDDEN);
+        }
+
         Drafts draft = draftRepository.findTopByUserMissions(userMission)
                 .orElse(null);
 
         if (draft == null) {
-            // draft가 없으면 새로 생성 후 저장
-            draft = Drafts.builder()
-                    .userMissions(userMission)
-                    .contents(contents)
-                    .build();
-            draft = draftRepository.save(draft);
+            draft = draftRepository.save(
+                    Drafts.builder()
+                            .userMissions(userMission)
+                            .contents(contents)
+                            .build()
+            );
         } else {
-            // 기존 draft이면 내용 바로 덮어쓰기
             draft.updateContents(contents);
         }
 
-        // userMission 상태 표시
         userMission.markDrafted();
 
         return DraftSaveResponse.builder()
@@ -123,5 +125,4 @@ public class MissionService {
                 .updatedAt(draft.getUpdatedAt())
                 .build();
     }
-
 }
