@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 public class AuthResponse {
     private String accessToken;
     private String refreshToken;
-    private boolean isRegistered; // true: 정회원, false: 닉네임 설정 필요
+    private boolean isRegistered; // true: 정회원, false: 아직 닉네임 설정이 필요한 단계
     private Long userId;
     private String nickname;
 }

@@ -30,14 +30,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (token != null && jwtProvider.validateToken(token)) {
             Long userId = jwtProvider.getUserId(token);
 
-            // 3. 인증 객체 생성 (비밀번호는 없으므로 null, 권한은 일단 빈 리스트 혹은 실제 권한 조회)
-            // 간단하게 ID만 SecurityContext에 넣음
+            // 3. 인증 객체 생성
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(userId, null, new ArrayList<>());
 
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-            // 4. SecurityContext에 등록 (이게 되어야 @AuthenticationPrincipal 사용 가능)
+            // 4. SecurityContext에 등록
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 

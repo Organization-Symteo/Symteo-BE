@@ -63,7 +63,7 @@ public class AuthService {
 
     // 리프레시 토큰 저장
     private void saveRefreshToken(User user, String refreshToken) {
-        // 만료 시간은 보통 2주 (14일)
+        // 만료 시간은 2주 (14일)
         LocalDateTime expiresAt = LocalDateTime.now().plusWeeks(2);
 
         UserTokens token = UserTokens.builder()
@@ -72,5 +72,37 @@ public class AuthService {
                 .expiresAt(expiresAt)
                 .build();
         userTokenRepository.save(token);
+    }
+
+    @Transactional
+    public AuthResponse reissue(String refreshToken) {
+
+        // 1. 넘어온 Refresh Token이 유효한지 검사 (위조 여부 확인)
+        if (!jwtProvider.validateToken(refreshToken)) {
+            throw new IllegalArgumentException("유효하지 않은 Refresh Token입니다. 다시 로그인해주세요.");
+        }
+
+        // 2. DB에서 해당 Refresh Token을 가진 정보 확인
+        UserTokens userTokens = userTokenRepository.findByRefreshToken(refreshToken)
+                .orElseThrow(() -> new IllegalArgumentException("토큰 정보를 찾을 수 없습니다."));
+
+        // 3. 토큰 주인(User) 정보 가져오기
+        User user = userTokens.getUser();
+
+        // 4. 새로운 토큰 쌍 발급 (Access + Refresh)
+        String newAccessToken = jwtProvider.createAccessToken(user.getId(), user.getRole());
+        String newRefreshToken = jwtProvider.createRefreshToken(user.getId());
+
+        // 5. DB 정보 업데이트 (Dirty Checking)
+        userTokens.updateRefreshToken(newRefreshToken, LocalDateTime.now().plusWeeks(2));
+
+        // 6. 새로운 토큰 세트 반환
+        return AuthResponse.builder()
+                .accessToken(newAccessToken)
+                .refreshToken(newRefreshToken)
+                .isRegistered(user.getRole() == Role.USER) // 가입 완료 여부
+                .userId(user.getId())
+                .nickname(user.getNickname())
+                .build();
     }
 }

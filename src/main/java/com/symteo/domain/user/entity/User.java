@@ -58,8 +58,8 @@ public class User {
         this.role = role;
     }
 
-    // 닉네임 설정 메서드 (가입 완료 시 사용)
-    public void updateNickname(String nickname) {
+    // 닉네임 설정 메서드 (회원가입 완료 처리)
+    public void authorizeUser(String nickname) {
         this.nickname = nickname;
         this.role = Role.USER; // 정회원 승격
     }
