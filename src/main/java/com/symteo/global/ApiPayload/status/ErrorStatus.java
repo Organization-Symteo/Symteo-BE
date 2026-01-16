@@ -17,12 +17,19 @@ public enum ErrorStatus implements BaseErrorCode {
     _FORBIDDEN(HttpStatus.FORBIDDEN, "COMMON403", "금지된 요청입니다."),
 
     // For test
-    TEMP_EXCEPTION(HttpStatus.BAD_REQUEST, "TEMP4001", "이거는 테스트");
+    TEMP_EXCEPTION(HttpStatus.BAD_REQUEST, "TEMP4001", "이거는 테스트"),
 
+    // Mission 오류
+    _MISSION_NOT_FOUND(HttpStatus.NOT_FOUND, "MISSION404","오늘의 미션이 없습니다."),
+    _MISSION_EXPIRED(HttpStatus.GONE, "MISSION410", "미션 기한이 만료되었습니다."),
+    _USER_MISSION_NOT_FOUND(HttpStatus.NOT_FOUND, "USER_MISSION404", "진행 중인 미션이 아닙니다."),
+    _IMAGE_URL_MISSING(HttpStatus.BAD_REQUEST, "MISSION400", "선택된 이미지가 없습니다."),
+
+    // Member 없음 오류
+    _MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER404", "사용자가 없습니다.");
 
     // Member 없음 오류
 //    MEMBER_NOT_FOUND(HttpStatus.BAD_REQUEST, "MEMBER4001", "사용자가 없습니다");
-
 
     private final HttpStatus httpStatus;
     private final String code;
