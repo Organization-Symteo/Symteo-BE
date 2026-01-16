@@ -1,11 +1,18 @@
 package com.symteo.domain.user.service;
 
+import com.symteo.domain.auth.dto.AuthResponse;
+import com.symteo.domain.auth.repository.UserTokenRepository;
+import com.symteo.domain.user.dto.UserSignUpRequest;
+import com.symteo.domain.user.entity.User;
+import com.symteo.domain.user.entity.UserTokens;
 import com.symteo.domain.user.repository.UserRepository;
 
+import com.symteo.global.jwt.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.regex.Pattern;
 
 @Service
@@ -13,6 +20,8 @@ import java.util.regex.Pattern;
 @Transactional(readOnly = true)
 public class UserService {
     private final UserRepository userRepository;
+    private final UserTokenRepository userTokenRepository;
+    private final JwtProvider jwtProvider;
 
     // 닉네임 규칙: 한글/영문/숫자 포함, 3~10자, 특수문자/공백 금지
     private static final String NICKNAME_REGEX = "^[가-힣a-zA-Z0-9]{3,10}$";
@@ -31,10 +40,57 @@ public class UserService {
 
         // 3. 중복 검사 (DB에 이미 저장된 닉네임인 경우)
         if (userRepository.existsByNickname(nickname)) {
-            return true; // 중복됨 (사용 불가)
+            return true; // 중복됨 (닉네임 사용 불가)
         }
 
-        return false; // 중복 안 됨 (사용 가능)
+        return false; // 중복 안 됨 (닉네임 사용 가능)
     }
 
+    // 회원가입 완료(닉네임 등록 + Role 변경 + 새 토큰 발급)
+    @Transactional
+    public AuthResponse completeSignUp(Long userId, UserSignUpRequest request) {
+
+        // 1. 유저 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+
+        // 2. 닉네임 중복 재검사 (안전장치)
+        if (checkNicknameDuplication(request.getNickname())) {
+            throw new IllegalArgumentException("이미 사용 중인 닉네임입니다.");
+        }
+
+        // 3. 닉네임 업데이트 및 권한 승격 (GUEST -> USER)
+        user.authorizeUser(request.getNickname());
+
+        // 4. 새로운 토큰 발급 (변경된 Role 정보 포함)
+        String newAccessToken = jwtProvider.createAccessToken(user.getId(), user.getRole());
+        String newRefreshToken = jwtProvider.createRefreshToken(user.getId());
+
+        // 5. Refresh Token 교체 (기존 것 삭제하지 않고 업데이트)
+        updateRefreshToken(user, newRefreshToken);
+
+        // 6. 응답 반환
+        return AuthResponse.builder()
+                .accessToken(newAccessToken)
+                .refreshToken(newRefreshToken)
+                .isRegistered(true)
+                .userId(user.getId())
+                .nickname(user.getNickname())
+                .build();
+    }
+
+    private void updateRefreshToken(User user, String refreshToken) {
+        // 기존 토큰 삭제 (User 객체에서 ID를 꺼내서 넘김)
+        userTokenRepository.deleteByUserId(user.getId());
+
+        // 새로운 토큰 생성
+        UserTokens newToken = UserTokens.builder()
+                .user(user)
+                .refreshToken(refreshToken)
+                .expiresAt(LocalDateTime.now().plusWeeks(2))
+                .build();
+
+        // 저장
+        userTokenRepository.save(newToken);
+    }
 }

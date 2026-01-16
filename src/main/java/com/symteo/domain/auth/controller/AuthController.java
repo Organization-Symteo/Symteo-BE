@@ -2,6 +2,7 @@ package com.symteo.domain.auth.controller;
 
 import com.symteo.domain.auth.dto.AuthResponse;
 import com.symteo.domain.auth.dto.LoginRequest;
+import com.symteo.domain.auth.dto.RefreshTokenRequest;
 import com.symteo.domain.auth.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -24,14 +25,14 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    /*
     // 2. 토큰 재발급
     @PostMapping("/refresh")
-    public ResponseEntity<AuthResponse> refresh(@RequestBody String refreshToken) {
-        // AuthService에 refresh 로직 추가 필요
-        return ResponseEntity.ok().build();
-    }
+    public ResponseEntity<AuthResponse> refresh(@RequestBody RefreshTokenRequest request) {
+        AuthResponse response = authService.reissue(request.getRefreshToken());
 
+        return ResponseEntity.ok(response);
+    }
+    /*
     // 3. 로그아웃
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(@RequestHeader("Authorization") String accessToken) {
