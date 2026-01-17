@@ -5,12 +5,6 @@ spring:
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
-#  datasource:
-#    url: ${DB_URL}
-#    username: ${DB_USERNAME}
-#    password: ${DB_PASSWORD}
-#    driver-class-name: com.mysql.cj.jdbc.Driver
-
   jpa:
     hibernate:
       ddl-auto: none
@@ -36,9 +30,15 @@ spring:
         options:
           model: gpt-4o
           temperature: 0.7
-          max-tokens: 1000
+          max-tokens: 20
     retry:
       max-attempts: 3
+
+# 로그 확인
+logging:
+  level:
+    org.springframework.security: DEBUG
+    org.springframework.web: DEBUG
 
 oauth:
   google:
