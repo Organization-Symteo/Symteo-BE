@@ -7,10 +7,12 @@ import com.symteo.domain.counsel.service.CounselQueryService;
 import com.symteo.global.ApiPayload.ApiResponse;
 import com.symteo.global.ApiPayload.status.SuccessStatus;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @RestController
-@RequestMapping("/api/counsel")
+@RequestMapping("/api/v1/counsel")
 @RequiredArgsConstructor
 public class CounselController {
 
@@ -19,15 +21,16 @@ public class CounselController {
     // AI 상담 요청 보내기
     @PostMapping("/request")
     public ApiResponse<CounselResDTO.ChatMessage> askAI(
-            CounselReqDTO.ChatMessage dto
+            @RequestBody CounselReqDTO.ChatMessage dto
     ){
+        log.info(">>>> 컨트롤러 진입 성공! DTO: {}", dto);
         return ApiResponse.onSuccess(counselCommandService.askCounsel(dto));
     }
 
     // AI 상담 종료하기
     @PatchMapping("/save")
     public ApiResponse<CounselResDTO.ChatSummary> summaryAI(
-            CounselReqDTO.ChatSummary dto
+            @RequestBody CounselReqDTO.ChatSummary dto
     ){
         return ApiResponse.onSuccess(counselCommandService.summaryCounsel(dto));
     }

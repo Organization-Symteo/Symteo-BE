@@ -11,7 +11,8 @@ import org.springframework.http.HttpStatus;
 public enum CounselErrorCode implements BaseErrorCode {
 
     _CHATROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "CHATROOM404","채팅방이 존재하지 않습니다."),
-    _CHATMESSAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "CHATMESSAGE404","채팅이 존재하지 않습니다.");
+    _CHATMESSAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "CHATMESSAGE404","채팅이 존재하지 않습니다."),
+    _AI_SERVER_ERROR(HttpStatus.REQUEST_TIMEOUT, "COUNSEL408", "AI 서버와의 연결이 원활하지 않습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

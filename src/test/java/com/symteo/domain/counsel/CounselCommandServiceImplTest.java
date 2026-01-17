@@ -59,7 +59,7 @@ class CounselCommandServiceImplTest {
 
         // then
         assertNotNull(result);
-        assertEquals("모킹된 AI 답변입니다.", result.text()); // 반환된 답변 확인
+        assertEquals("모킹된 AI 답변입니다.", result.AiResponse()); // 반환된 답변 확인
         verify(chatRoomRepository, times(1)).save(any()); // 채팅방 저장 호출 확인
         verify(chatMessageRepository, times(2)).save(any()); // 유저 질문 + AI 답변 총 2번 저장 확인
     }
