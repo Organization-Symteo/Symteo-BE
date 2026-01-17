@@ -7,9 +7,7 @@ import com.symteo.domain.counsel.service.CounselQueryService;
 import com.symteo.global.ApiPayload.ApiResponse;
 import com.symteo.global.ApiPayload.status.SuccessStatus;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/counsel")
@@ -18,10 +16,19 @@ public class CounselController {
 
     private final CounselCommandService counselCommandService;
 
-    @GetMapping("/upload")
+    // AI 상담 요청 보내기
+    @PostMapping("/request")
     public ApiResponse<CounselResDTO.ChatMessage> askAI(
             CounselReqDTO.ChatMessage dto
     ){
-        return ApiResponse.onSuccess(counselCommandService.createCounsel(dto));
+        return ApiResponse.onSuccess(counselCommandService.askCounsel(dto));
+    }
+
+    // AI 상담 종료하기
+    @PatchMapping("/save")
+    public ApiResponse<CounselResDTO.ChatSummary> summaryAI(
+            CounselReqDTO.ChatSummary dto
+    ){
+        return ApiResponse.onSuccess(counselCommandService.summaryCounsel(dto));
     }
 }

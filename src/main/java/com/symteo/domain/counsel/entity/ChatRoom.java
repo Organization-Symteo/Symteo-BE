@@ -18,14 +18,14 @@ public class ChatRoom {
     private Long chatroom_id;
 
     //채팅 사용자
-    @Column(name = "USER_ID", nullable = false)
+    @Column(name = "user_id", nullable = false)
     private Long userId;
 
     //채팅 요약
-    @Column(name = "CHATSUMMARY")
+    @Column(name = "chatsummary")
     private String chatSummary;
 
     //연관 관계
     @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL)
-    private List<ChatMessage> orderItems = new ArrayList<>();
+    private List<ChatMessage> chatMessages = new ArrayList<>();
 }

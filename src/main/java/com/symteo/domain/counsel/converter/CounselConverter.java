@@ -9,16 +9,31 @@ public class CounselConverter {
 
     // 엔티티 -> DTO
     // AI 답변을 String으로 변환
-    public static CounselResDTO.ChatMessage EntityToChatMessage(
+    public static CounselResDTO.ChatMessage EntityToChat(
+            Long userId,
+            Long chatRoomId,
+            String question,
             String answer
     ){
         return CounselResDTO.ChatMessage.builder()
-                .text(answer)
+                .userId(userId)
+                .chatRoomId(chatRoomId)
+                .userRequest(question)
+                .AiResponse(answer)
                 .build();
     }
 
     // DTO -> 엔티티
-    // 사용자 질문을 chatMessage로 변환
+    // 1. 사용자 정보를 chatRoom으로 변환
+    public static ChatRoom toChatRoom(
+            Long userId
+    ){
+        return ChatRoom.builder()
+                .userId(userId)
+                .build();
+    }
+
+    // 2. 사용자 질문을 chatMessage로 변환
     public static ChatMessage toChatMessage(
             String message,
             ChatRoom chatRoom
@@ -28,5 +43,4 @@ public class CounselConverter {
                 .chatRoom(chatRoom)
                 .build();
     }
-
 }

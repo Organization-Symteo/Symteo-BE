@@ -4,9 +4,18 @@ import lombok.Builder;
 
 public class CounselResDTO {
 
-    // Converter DTO 생성을 위한 Builder
+    // AI 답변
     @Builder
     public record ChatMessage(
-            String text
+            Long userId,
+            Long chatRoomId,
+            String userRequest,
+            String AiResponse
+    ){}
+
+    // AI 상담 요약
+    @Builder
+    public record ChatSummary(
+            String chatSummary
     ){}
 }
