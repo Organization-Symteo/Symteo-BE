@@ -3,16 +3,15 @@ package com.symteo.domain.user.entity;
 import com.symteo.domain.user.enums.Role;
 import com.symteo.domain.user.enums.SocialType;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import jakarta.persistence.Id;
 
 import java.time.LocalDateTime;
 
+@Builder
+@AllArgsConstructor
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

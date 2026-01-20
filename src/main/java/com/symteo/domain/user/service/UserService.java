@@ -1,5 +1,6 @@
 package com.symteo.domain.user.service;
 
+import com.sun.jdi.request.DuplicateRequestException;
 import com.symteo.domain.auth.dto.AuthResponse;
 import com.symteo.domain.auth.repository.UserTokenRepository;
 import com.symteo.domain.user.dto.UserSignUpRequest;
@@ -56,7 +57,7 @@ public class UserService {
 
         // 2. 닉네임 중복 재검사 (안전장치)
         if (checkNicknameDuplication(request.getNickname())) {
-            throw new IllegalArgumentException("이미 사용 중인 닉네임입니다.");
+            throw new DuplicateRequestException("이미 사용 중인 닉네임입니다.");
         }
 
         // 3. 닉네임 업데이트 및 권한 승격 (GUEST -> USER)
