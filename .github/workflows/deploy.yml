@@ -2,7 +2,7 @@ name: Deploy to EC2 with Docker
 
 on:
   push:
-    branches: [ "main" ] # 나경님이 방금 푸시한 그 main 브랜치예요!
+    branches: [ "main" ]
 
 jobs:
   deploy:
@@ -35,4 +35,6 @@ jobs:
             docker pull ${{ secrets.DOCKER_USERNAME }}/symteo-server
             docker stop symteo-server || true
             docker rm symteo-server || true
+            # 혹시 모를 포트 점유 프로세스 강제 종료
+            sudo fuser -k 8080/tcp || true 
             docker run -d --name symteo-server -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/symteo-server
