@@ -33,13 +33,19 @@ jobs:
           key: ${{ secrets.EC2_KEY }}
           script: |
             # 최신 이미지
-            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/symteo-server
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/symteo-server  
             
             # 기존 컨테이너 및 포트 정리
-            sudo docker stop symteo-server || true
-            sudo docker rm symteo-server || true
+            sudo docker stop $(sudo docker ps -q) || true
+            sudo docker rm $(sudo docker ps -aq) || true
             sudo fuser -k 8080/tcp || true
-            sleep 2
+            sleep 3
+            
+#            # 포트 사용 확인
+#            if sudo lsof -i :8080; then
+#              echo "Port 8080 is still in use. Clean up failed."
+#              exit 1
+#            fi
             
             # 환경변수
             sudo docker run -d \
@@ -52,10 +58,4 @@ jobs:
               -e GOOGLE_CLIENT_ID="${{ secrets.GOOGLE_CLIENT_ID }}" \
               ${{ secrets.DOCKER_USERNAME }}/symteo-server
             
-            # 포트 사용 확인
-            if sudo lsof -i :8080; then
-              echo "Port 8080 is still in use. Exiting."
-              exit 1
-            fi
-            sudo docker run -d --name symteo-server -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/symteo-server
-            sudo echo "Deployment completed successfully."
+            echo "Deployment completed successfully."
