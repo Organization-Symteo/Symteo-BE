@@ -27,9 +27,13 @@ public enum ErrorStatus implements BaseErrorCode {
 
     // Member 없음 오류
     _MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER404", "사용자가 없습니다."),
-
-    // Member 없음 오류
-//    MEMBER_NOT_FOUND(HttpStatus.BAD_REQUEST, "MEMBER4001", "사용자가 없습니다");
+  
+    // User 오류
+   // _MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER404", "사용자가 없습니다."),
+  
+    _NICKNAME_DUPLICATED(HttpStatus.CONFLICT, "USER409", "이미 사용 중인 닉네임입니다."),
+    _NICKNAME_INVALID(HttpStatus.BAD_REQUEST, "USER400", "닉네임은 특수문자를 제외한 3~10자리여야 합니다."),
+    _NICKNAME_EMPTY(HttpStatus.BAD_REQUEST, "USER400", "닉네임을 입력해주세요."),
 
     // 닉네임 중복 오류
     _NICKNAME_CONFLICT(HttpStatus.CONFLICT, "USER409", "이미 사용 중인 닉네임입니다."),
