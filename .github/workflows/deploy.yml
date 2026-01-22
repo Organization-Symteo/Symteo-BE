@@ -41,12 +41,6 @@ jobs:
             sudo fuser -k 8080/tcp || true
             sleep 3
             
-#            # 포트 사용 확인
-#            if sudo lsof -i :8080; then
-#              echo "Port 8080 is still in use. Clean up failed."
-#              exit 1
-#            fi
-            
             # 환경변수
             sudo docker run -d \
               --name symteo-server \
