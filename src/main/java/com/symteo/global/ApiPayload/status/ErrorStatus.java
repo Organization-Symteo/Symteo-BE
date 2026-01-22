@@ -25,21 +25,11 @@ public enum ErrorStatus implements BaseErrorCode {
     _USER_MISSION_NOT_FOUND(HttpStatus.NOT_FOUND, "USER_MISSION404", "진행 중인 미션이 아닙니다."),
     _IMAGE_URL_MISSING(HttpStatus.BAD_REQUEST, "MISSION400", "선택된 이미지가 없습니다."),
 
-    // Member 없음 오류
-    _MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER404", "사용자가 없습니다."),
-  
     // User 오류
-   // _MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER404", "사용자가 없습니다."),
-  
+    _MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER404", "사용자가 없습니다."),
     _NICKNAME_DUPLICATED(HttpStatus.CONFLICT, "USER409", "이미 사용 중인 닉네임입니다."),
     _NICKNAME_INVALID(HttpStatus.BAD_REQUEST, "USER400", "닉네임은 특수문자를 제외한 3~10자리여야 합니다."),
-    _NICKNAME_EMPTY(HttpStatus.BAD_REQUEST, "USER400", "닉네임을 입력해주세요."),
-
-    // 닉네임 중복 오류
-    _NICKNAME_CONFLICT(HttpStatus.CONFLICT, "USER409", "이미 사용 중인 닉네임입니다."),
-
-    // AI 상담사 중복 오류
-    COUNSELOR_ALREADY_EXISTS(HttpStatus.CONFLICT, "COUNSELOR409", "이미 상담사 설정이 존재합니다.");
+    _NICKNAME_EMPTY(HttpStatus.BAD_REQUEST, "USER400", "닉네임을 입력해주세요.");
 
     private final HttpStatus httpStatus;
     private final String code;
