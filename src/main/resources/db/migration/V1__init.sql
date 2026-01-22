@@ -75,10 +75,10 @@ CREATE TABLE `User_Tokens` (
 
 CREATE TABLE `AI_Counselor_Settings` (
                                          `user_id` BIGINT NOT NULL,
-                                         `expert_nature` VARCHAR(20) NOT NULL,
+                                         `atmosphere` VARCHAR(20) NOT NULL,
                                          `support_style` VARCHAR(20) NOT NULL,
-                                         `action_style` VARCHAR(20) NOT NULL,
-                                         `tone_distance` VARCHAR(20) NOT NULL,
+                                         `role_counselor` VARCHAR(20) NOT NULL,
+                                         `answer_format` VARCHAR(20) NOT NULL,
                                          PRIMARY KEY (`user_id`),
                                          CONSTRAINT `FK_Users_TO_AICounselor` FOREIGN KEY (`user_id`) REFERENCES `Users` (`users_id`)
 );
