@@ -1,0 +1,55 @@
+name: Deploy to EC2 with Docker
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Build with Gradle
+        run: ./gradlew clean build -x test
+
+      - name: Docker build & push
+        run: |
+          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/symteo-server .
+          docker push ${{ secrets.DOCKER_USERNAME }}/symteo-server
+
+      - name: EC2 Deployment
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_KEY }}
+          script: |
+            # 최신 이미지
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/symteo-server  
+            
+            # 기존 컨테이너 및 포트 정리
+            sudo docker stop $(sudo docker ps -q) || true
+            sudo docker rm $(sudo docker ps -aq) || true
+            sudo fuser -k 8080/tcp || true
+            sleep 3
+            
+            # 환경변수
+            sudo docker run -d \
+              --name symteo-server \
+              -p 8080:8080 \
+              -e DB_URL="${{ secrets.DB_URL }}" \
+              -e DB_USERNAME="${{ secrets.DB_USERNAME }}" \
+              -e DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
+              -e OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
+              -e GOOGLE_CLIENT_ID="${{ secrets.GOOGLE_CLIENT_ID }}" \
+              ${{ secrets.DOCKER_USERNAME }}/symteo-server
+            
+            echo "Deployment completed successfully."

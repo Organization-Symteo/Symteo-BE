@@ -1,11 +1,15 @@
 package com.symteo.domain.user.controller;
 
 import com.symteo.domain.auth.dto.AuthResponse;
+import com.symteo.domain.user.dto.UpdateNicknameRequest;
+import com.symteo.domain.user.dto.UpdateUserSettingsRequest;
+import com.symteo.domain.user.dto.UserProfileResponse;
+import com.symteo.domain.user.dto.UserSettingsResponse;
 import com.symteo.domain.user.dto.UserSignUpRequest;
 import com.symteo.domain.user.service.UserService;
+import com.symteo.global.ApiPayload.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,44 +22,55 @@ public class UserController {
 
     // 닉네임 중복 확인 API
     @GetMapping("/check-nickname")
-    public ResponseEntity<?> checkNickname(@RequestParam String nickname) {
-        try {
-            boolean isDuplicated = userService.checkNicknameDuplication(nickname);
-
-            // isDuplicated가 true면 중복(사용불가), false면 사용 가능
-            return ResponseEntity.ok(new NicknameCheckResponse(isDuplicated));
-
-        } catch (IllegalArgumentException e) {
-            // 유효성(글자수, 특수문자 등) 실패 시 400 에러 리턴
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ApiResponse<NicknameCheckResponse> checkNickname(@RequestParam String nickname) {
+        boolean isDuplicated = userService.checkNicknameDuplication(nickname);
+        return ApiResponse.onSuccess(new NicknameCheckResponse(isDuplicated));
     }
 
 
     // 회원가입 완료 (닉네임 설정) API
     @PostMapping("/signup")
-    public ResponseEntity<?> completeSignUp(
+    public ApiResponse<AuthResponse> completeSignUp(
             @AuthenticationPrincipal Long userId,
             @RequestBody UserSignUpRequest request
     ) {
         log.info("회원가입 완료 요청 - UserId: {}, Nickname: {}", userId, request.getNickname());
+        AuthResponse response = userService.completeSignUp(userId, request);
+        return ApiResponse.onSuccess(response);
+    }
 
-        try {
-            // userId가 null일 경우 - 토큰 오류
-            if (userId == null) {
-                return ResponseEntity.status(401).body("인증 정보가 유효하지 않습니다.");
-            }
+    // MY 심터 프로필 정보 조회 API (프로필 사진, 닉네임)
+    @GetMapping("/profile")
+    public ApiResponse<UserProfileResponse> getUserProfile(@AuthenticationPrincipal Long userId) {
+        UserProfileResponse response = userService.getUserProfile(userId);
+        return ApiResponse.onSuccess(response);
+    }
 
-            AuthResponse response = userService.completeSignUp(userId, request);
-            return ResponseEntity.ok(response);
+    // 닉네임 수정 API
+    @PatchMapping("/nickname")
+    public ApiResponse<UserProfileResponse> updateNickname(
+            @AuthenticationPrincipal Long userId,
+            @RequestBody UpdateNicknameRequest request
+    ) {
+        UserProfileResponse response = userService.updateNickname(userId, request);
+        return ApiResponse.onSuccess(response);
+    }
 
-        } catch (IllegalArgumentException e) {
-            // 중복된 닉네임이거나 유효하지 않은 입력일 경우
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (Exception e) {
-            log.error("회원가입 처리 중 에러 발생", e);
-            return ResponseEntity.internalServerError().body("서버 에러가 발생했습니다.");
-        }
+    // 환경설정 토글 상태 및 앱 버전 조회 API
+    @GetMapping("/settings")
+    public ApiResponse<UserSettingsResponse> getUserSettings(@AuthenticationPrincipal Long userId) {
+        UserSettingsResponse response = userService.getUserSettings(userId);
+        return ApiResponse.onSuccess(response);
+    }
+
+    // 환경설정 업데이트 API
+    @PatchMapping("/settings")
+    public ApiResponse<UserSettingsResponse> updateUserSettings(
+            @AuthenticationPrincipal Long userId,
+            @RequestBody UpdateUserSettingsRequest request
+    ) {
+        UserSettingsResponse response = userService.updateUserSettings(userId, request);
+        return ApiResponse.onSuccess(response);
     }
 
     // response DTO

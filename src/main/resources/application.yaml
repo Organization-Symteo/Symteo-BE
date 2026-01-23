@@ -63,3 +63,8 @@ springdoc:
 
 jwt:
   secret: "vmfhalwtptkdgoqjfrktyjsskfdyrgnwjdqkqhdtlsfhqptwwkd" # 임의의 긴 문자열
+
+# 앱 버전 정보
+app:
+  version: 0.0.1
+
