@@ -1,7 +1,6 @@
 package com.symteo.domain.todayMission.service;
 
 import com.symteo.domain.todayMission.dto.DraftSaveResponse;
-import com.symteo.domain.todayMission.dto.ImageSaveResponse;
 import com.symteo.domain.todayMission.dto.MissionResponse;
 import com.symteo.domain.todayMission.dto.UserMissionStartResponse;
 import com.symteo.domain.todayMission.entity.Missions;
@@ -54,8 +53,13 @@ public class MissionService {
     }
 
     // 오늘의 미션 제출 시작 api
-    public UserMissionStartResponse startMission(Long missionId, User user) {
-
+    @Transactional
+    public UserMissionStartResponse startMission(
+            Long missionId,
+            User user,
+            String contents,
+            String imageUrl
+    ) {
         Missions mission = missionRepository.findById(missionId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus._MISSION_NOT_FOUND));
 
@@ -64,7 +68,7 @@ public class MissionService {
             throw new GeneralException(ErrorStatus._MISSION_EXPIRED);
         }
 
-        // 이미 시작한 미션이면 재사용
+        // UserMission 생성 or 재사용
         UserMissions userMission = userMissionRepository
                 .findByUserAndMissions(user, mission)
                 .orElseGet(() ->
@@ -76,16 +80,43 @@ public class MissionService {
                         )
                 );
 
-        long remainingSeconds = Duration.between(
-                LocalDateTime.now(),
-                mission.getDeadLine()
-        ).getSeconds();
+        // contents 있으면 → 저장
+        if (contents != null && !contents.isBlank()) {
+            Drafts draft = draftRepository.findTopByUserMissions(userMission)
+                    .orElse(null);
+
+            if (draft == null) {
+                draftRepository.save(
+                        Drafts.builder()
+                                .userMissions(userMission)
+                                .contents(contents)
+                                .build()
+                );
+            } else {
+                draft.updateContents(contents);
+            }
+        }
+
+        // imageUrl 있으면 → 이미지 저장
+        if (imageUrl != null && !imageUrl.isBlank()) {
+            missionImageRepository.save(
+                    MissionImages.builder()
+                            .userMissions(userMission)
+                            .imageUrl(imageUrl)
+                            .build()
+            );
+        }
+
+        long remainingSeconds = Math.max(
+                Duration.between(LocalDateTime.now(), mission.getDeadLine()).getSeconds(),
+                0
+        );
 
         return UserMissionStartResponse.builder()
                 .userMissionId(userMission.getUserMissionId())
                 .isDrafted(userMission.isDrafted())
                 .isCompleted(userMission.isCompleted())
-                .remainingSeconds(Math.max(remainingSeconds, 0))
+                .remainingSeconds(remainingSeconds)
                 .build();
     }
 
@@ -127,35 +158,6 @@ public class MissionService {
                 .draftId(draft.getDraftId())
                 .isDrafted(true)
                 .updatedAt(draft.getUpdatedAt())
-                .build();
-    }
-
-    // 오늘의 미션 이미지 추가 api
-    @Transactional
-    public ImageSaveResponse saveImage(Long userMissionId, Long userId, String imageUrl) {
-
-        if (imageUrl == null || imageUrl.isBlank()) {
-            throw new GeneralException(ErrorStatus._IMAGE_URL_MISSING);
-        }
-
-        UserMissions userMission = userMissionRepository.findById(userMissionId)
-                .orElseThrow(() -> new GeneralException(ErrorStatus._USER_MISSION_NOT_FOUND));
-
-        // 본인 미션인지 검증
-        if (!userMission.getUser().getId().equals(userId)) {
-            throw new GeneralException(ErrorStatus._FORBIDDEN);
-        }
-
-        MissionImages image = missionImageRepository.save(
-                MissionImages.builder()
-                        .userMissions(userMission)
-                        .imageUrl(imageUrl)
-                        .build()
-        );
-
-        return ImageSaveResponse.builder()
-                .userMissionId(userMissionId)
-                .imageUrl(image.getImageUrl())
                 .build();
     }
 }
