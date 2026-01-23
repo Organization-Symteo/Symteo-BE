@@ -31,7 +31,7 @@ public class CounselCommandServiceImpl implements CounselCommandService{
     private final ChatRoomRepository chatRoomRepository;
     private final ChatMessageRepository chatMessageRepository;
 
-    // OpenAI 요청 메소드
+    /// --- 1. 상담 요청 메소드
     @Override
     @Transactional
     public CounselResDTO.ChatMessage askCounsel(CounselReqDTO.ChatMessage dto) {
@@ -70,7 +70,7 @@ public class CounselCommandServiceImpl implements CounselCommandService{
         return CounselConverter.EntityToChatSet(chatRoom, question, answer);
     }
 
-    // OpenAI 상담 종료 및 요약 메소드
+    /// --- 2. 상담 종료 및 요약 메소드
     // 전체 채팅, AI 채팅, 유저 채팅을 각각 요약한다.
     @Transactional
     @Override
@@ -101,15 +101,18 @@ public class CounselCommandServiceImpl implements CounselCommandService{
             - AI 메시지: {aiMessages}
            \s""";
 
-        AISummaryDTO.ChatMessage summary = null;
+        AISummaryDTO.ChatMessage summary;
         try {
             summary = chatClient.prompt()
                     .user(u -> u.text(promptText)
                             .param("chatMessages", formatMessages(chatMessages))
                             .param("userMessages", formatMessages(userMessages))
                             .param("aiMessages", formatMessages(aiMessages))
-            } catch (Exception e) {
-            log.error("e: ", e);
+                    )
+                    .call()
+                    .entity(AISummaryDTO.ChatMessage.class);
+        } catch (Exception e) {
+            log.error("Spring AI call failed", e);
             throw new CounselException(CounselErrorCode._AI_SERVER_ERROR);
         }
 
@@ -122,10 +125,20 @@ public class CounselCommandServiceImpl implements CounselCommandService{
         return CounselConverter.EntityToChatSummary(chatRoom);
     }
 
-    // 사용자 요청 전처리 메소드
+    /// 2-1. 사용자 요청 전처리 메소드
     private String formatMessages(List<ChatMessage> messages) {
         return messages.stream()
                 .map(m -> String.format("[%s]: %s", m.getRole(), m.getMessage()))
                 .collect(Collectors.joining("\n"));
+    }
+
+    /// 3. 상담 삭제 메소드
+    @Override
+    public Long deleteChat(Long courseId) {
+        ChatRoom chatRoom = chatRoomRepository.findById(courseId)
+                .orElseThrow(() -> new CounselException(CounselErrorCode._CHATROOM_NOT_FOUND));
+
+        chatRoomRepository.delete(chatRoom);
+        return courseId;
     }
 }

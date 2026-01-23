@@ -54,6 +54,11 @@ public class CounselController {
     }
 
     // 상담 삭제하기
-    // @DeleteMapping("/{counselId}")
+    @DeleteMapping("/{counselId}")
+    public ApiResponse<Long> deleteChat(
+            @PathVariable Long counselId
+    ){
+        return ApiResponse.onSuccess(counselCommandService.deleteChat(counselId));
+    }
 
 }
