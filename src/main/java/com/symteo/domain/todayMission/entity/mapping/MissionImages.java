@@ -20,7 +20,7 @@ public class MissionImages {
     @JoinColumn(name = "u_mission_id", nullable = false)
     private UserMissions userMissions;
 
-    @Column(name = "image_url", columnDefinition = "TEXT", nullable = false)
+    @Column(name = "image_url", columnDefinition = "TEXT")
     private String imageUrl;
 
     @Builder
