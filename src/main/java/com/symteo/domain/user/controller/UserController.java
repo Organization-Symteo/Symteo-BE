@@ -2,7 +2,9 @@ package com.symteo.domain.user.controller;
 
 import com.symteo.domain.auth.dto.AuthResponse;
 import com.symteo.domain.user.dto.UpdateNicknameRequest;
+import com.symteo.domain.user.dto.UpdateUserSettingsRequest;
 import com.symteo.domain.user.dto.UserProfileResponse;
+import com.symteo.domain.user.dto.UserSettingsResponse;
 import com.symteo.domain.user.dto.UserSignUpRequest;
 import com.symteo.domain.user.service.UserService;
 import com.symteo.global.ApiPayload.ApiResponse;
@@ -51,6 +53,23 @@ public class UserController {
             @RequestBody UpdateNicknameRequest request
     ) {
         UserProfileResponse response = userService.updateNickname(userId, request);
+        return ApiResponse.onSuccess(response);
+    }
+
+    // 환경설정 토글 상태 및 앱 버전 조회 API
+    @GetMapping("/settings")
+    public ApiResponse<UserSettingsResponse> getUserSettings(@AuthenticationPrincipal Long userId) {
+        UserSettingsResponse response = userService.getUserSettings(userId);
+        return ApiResponse.onSuccess(response);
+    }
+
+    // 환경설정 업데이트 API
+    @PatchMapping("/settings")
+    public ApiResponse<UserSettingsResponse> updateUserSettings(
+            @AuthenticationPrincipal Long userId,
+            @RequestBody UpdateUserSettingsRequest request
+    ) {
+        UserSettingsResponse response = userService.updateUserSettings(userId, request);
         return ApiResponse.onSuccess(response);
     }
 

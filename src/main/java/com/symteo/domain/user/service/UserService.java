@@ -2,16 +2,21 @@ package com.symteo.domain.user.service;
 import com.symteo.domain.auth.dto.AuthResponse;
 import com.symteo.domain.auth.repository.UserTokenRepository;
 import com.symteo.domain.user.dto.UpdateNicknameRequest;
+import com.symteo.domain.user.dto.UpdateUserSettingsRequest;
 import com.symteo.domain.user.dto.UserProfileResponse;
+import com.symteo.domain.user.dto.UserSettingsResponse;
 import com.symteo.domain.user.dto.UserSignUpRequest;
 import com.symteo.domain.user.entity.User;
+import com.symteo.domain.user.entity.UserSettings;
 import com.symteo.domain.user.entity.UserTokens;
 import com.symteo.domain.user.repository.UserRepository;
+import com.symteo.domain.user.repository.UserSettingsRepository;
 
 import com.symteo.global.ApiPayload.exception.GeneralException;
 import com.symteo.global.ApiPayload.status.ErrorStatus;
 import com.symteo.global.jwt.JwtProvider;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,7 +29,11 @@ import java.util.regex.Pattern;
 public class UserService {
     private final UserRepository userRepository;
     private final UserTokenRepository userTokenRepository;
+    private final UserSettingsRepository userSettingsRepository;
     private final JwtProvider jwtProvider;
+
+    @Value("${app.version:0.0.1}")
+    private String appVersion;
 
     // 닉네임 규칙: 한글/영문/숫자 포함, 3~10자, 특수문자/공백 금지
     private static final String NICKNAME_REGEX = "^[가-힣a-zA-Z0-9]{3,10}$";
@@ -118,4 +127,63 @@ public class UserService {
 
         return UserProfileResponse.of(user.getNickname(), null);
     }
+
+    // 환경설정 토글 상태 및 앱 버전 조회
+    public UserSettingsResponse getUserSettings(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus._MEMBER_NOT_FOUND));
+
+        // UserSettings 조회 (없으면 기본값으로 생성)
+        UserSettings settings = userSettingsRepository.findByUser_Id(userId)
+                .orElseGet(() -> createDefaultSettings(user));
+
+        return UserSettingsResponse.of(
+                settings.getIsCheerMsgOn(),
+                settings.getIsAnalysisReadyOn(),
+                settings.getIsMonthlyReportOn(),
+                settings.getIsLockEnabled(),
+                appVersion
+        );
+    }
+
+    // 환경설정 업데이트
+    @Transactional
+    public UserSettingsResponse updateUserSettings(Long userId, UpdateUserSettingsRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus._MEMBER_NOT_FOUND));
+
+        UserSettings settings = userSettingsRepository.findByUser_Id(userId)
+                .orElseGet(() -> createDefaultSettings(user));
+
+        // null이 아닌 값만 업데이트
+        if (request.getIsCheerMsgOn() != null) {
+            settings.updateCheerMsg(request.getIsCheerMsgOn());
+        }
+        if (request.getIsAnalysisReadyOn() != null) {
+            settings.updateAnalysisReady(request.getIsAnalysisReadyOn());
+        }
+        if (request.getIsMonthlyReportOn() != null) {
+            settings.updateMonthlyReport(request.getIsMonthlyReportOn());
+        }
+        if (request.getIsLockEnabled() != null) {
+            settings.updateLockEnabled(request.getIsLockEnabled());
+        }
+
+        return UserSettingsResponse.of(
+                settings.getIsCheerMsgOn(),
+                settings.getIsAnalysisReadyOn(),
+                settings.getIsMonthlyReportOn(),
+                settings.getIsLockEnabled(),
+                appVersion
+        );
+    }
+
+    // 기본 UserSettings 생성
+    private UserSettings createDefaultSettings(User user) {
+        UserSettings settings = UserSettings.builder()
+                .user(user)
+                .build();
+        return userSettingsRepository.save(settings);
+    }
 }
+
