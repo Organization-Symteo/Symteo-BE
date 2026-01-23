@@ -44,4 +44,14 @@ public class CounselQueryServiceImpl implements CounselQueryService{
 
         return CounselConverter.EntityToChatDetails(chatRoom);
     }
+
+    // 상담 삭제
+    @Override
+    public Long deleteChat(Long chatRoomId) {
+        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new CounselException(CounselErrorCode._CHATROOM_NOT_FOUND));
+
+        chatRoomRepository.delete(chatRoom);
+        return chatRoomId;
+    }
 }

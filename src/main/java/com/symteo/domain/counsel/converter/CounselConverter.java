@@ -3,7 +3,6 @@ package com.symteo.domain.counsel.converter;
 import com.symteo.domain.counsel.dto.res.CounselResDTO;
 import com.symteo.domain.counsel.entity.ChatMessage;
 import com.symteo.domain.counsel.entity.ChatRoom;
-
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -52,7 +51,7 @@ public class CounselConverter {
         return CounselResDTO.Chat.builder()
                 .dateTime(dateTime.format(formatter))
                 .chatSummary(chatRoom.getChatSummary())
-                .chatRoomId(chatRoom.getChatroomId())
+                .counselId(chatRoom.getChatroomId())
                 .build();
     }
 

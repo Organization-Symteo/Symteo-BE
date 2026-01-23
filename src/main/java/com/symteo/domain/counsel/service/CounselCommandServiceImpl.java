@@ -22,8 +22,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static org.codehaus.groovy.runtime.DefaultGroovyMethods.print;
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -92,22 +90,15 @@ public class CounselCommandServiceImpl implements CounselCommandService{
         // 프롬프트 설정
         String promptText = """
             당신은 전문 심리 상담 요약가입니다. 아래 제공된 세 가지 메시지 그룹을 각각 분석하여 요약해주세요.
-            모든 요약은 모두 15자 이내로 '명사'로 끝나게 해주세요.\s
-            예시)\s
-            [그룹 1: 전체 대화 내역] "직장 스트레스와 번아웃 상담",\s
-            [그룹 2: 사용자 메시지] "팀장님과의 갈등으로 퇴사까지 고민, 무기력감 호소, 가슴 답답함 느낌, 병원 필요성 느낌",
-            [그룹 3: AI 상담사 메시지] "현재 감정을 인정하고 작은 휴식부터 하는 것 추천 병원 진료 추천",
-           \s
-            [그룹 1: 전체 대화 내역]
-            {chatMessages}
-           \s
-            [그룹 2: 사용자 메시지]
-            {userMessages}
-           \s
-            [그룹 3: AI 상담사 메시지]
-            {aiMessages}
-           \s
-            {format}
+            [지시 사항]
+            1. 모든 요약은 15자 이내의 짧은 문장으로 작성하세요.
+            2. 반드시 '명사'로 끝나도록 작성하세요. (예: "심리적 불안감 호소", "휴식 및 상담 권고")
+            3. JSON의 모든 필드(chatMessages, userMessages, aiMessages)를 반드시 채워주세요.
+               \s
+            [데이터]
+            - 전체 대화: {chatMessages}
+            - 사용자 메시지: {userMessages}
+            - AI 메시지: {aiMessages}
            \s""";
 
         AISummaryDTO.ChatMessage summary = null;
@@ -117,17 +108,15 @@ public class CounselCommandServiceImpl implements CounselCommandService{
                             .param("chatMessages", formatMessages(chatMessages))
                             .param("userMessages", formatMessages(userMessages))
                             .param("aiMessages", formatMessages(aiMessages))
-                            .param("format", converter.getFormat())) // 결과 형식을 지정
-                    .call()
-                    .entity(converter);
             } catch (Exception e) {
-            print("예외 발생! : {}", e);
+            log.error("e: ", e);
+            throw new CounselException(CounselErrorCode._AI_SERVER_ERROR);
         }
 
         // 4. AI 요약 내용 ChatRooms에 저장하기
         chatRoom.setChatSummary(Objects.requireNonNull(summary).chatMessages());
         chatRoom.setUserSummary(summary.userMessages());
-        chatRoom.setAiSummary(summary.userMessages());
+        chatRoom.setAiSummary(summary.aiMessages());
 
         // 5. 반환
         return CounselConverter.EntityToChatSummary(chatRoom);

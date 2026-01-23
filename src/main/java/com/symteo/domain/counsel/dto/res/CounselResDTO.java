@@ -33,7 +33,7 @@ public class CounselResDTO {
     public record Chat(
             String dateTime,
             String chatSummary,
-            Long chatRoomId
+            Long counselId
     ){}
 
 }
