@@ -1,6 +1,6 @@
-package com.symteo.domain.auth.controller;
+package com.symteo.global.auth.controller;
 
-import com.symteo.domain.auth.dto.AuthResponse;
+import com.symteo.global.auth.dto.AuthResponse;
 import com.symteo.domain.user.enums.Role;
 import com.symteo.global.jwt.JwtProvider;
 import lombok.RequiredArgsConstructor;

@@ -1,6 +1,6 @@
 package com.symteo.domain.user.controller;
 
-import com.symteo.domain.auth.dto.AuthResponse;
+import com.symteo.global.auth.dto.AuthResponse;
 import com.symteo.domain.user.dto.UpdateNicknameRequest;
 import com.symteo.domain.user.dto.UpdateUserSettingsRequest;
 import com.symteo.domain.user.dto.UserProfileResponse;
@@ -26,7 +26,6 @@ public class UserController {
         boolean isDuplicated = userService.checkNicknameDuplication(nickname);
         return ApiResponse.onSuccess(new NicknameCheckResponse(isDuplicated));
     }
-
 
     // 회원가입 완료 (닉네임 설정) API
     @PostMapping("/signup")

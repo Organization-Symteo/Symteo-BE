@@ -12,6 +12,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 import jakarta.persistence.Id;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -51,6 +53,11 @@ public class User {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    // 연관 관계 매핑
+    // 회원 탈퇴 기능을 위해 자식 엔티티들과의 관계에 cascade = CascadeType.ALL과 orphanRemoval = true를 넣어주세요
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserTokens> userTokens = new ArrayList<>();
+
     @Builder
     public User(SocialType socialType, String socialId, com.symteo.domain.user.enums.Role role) {
         this.socialType = socialType;
@@ -64,4 +71,8 @@ public class User {
         this.role = Role.USER; // 정회원 승격
     }
 
+    // 탈퇴 처리 메서드 (Soft Delete)
+    public void deleteSoftly() {
+        this.deletedAt = LocalDateTime.now();
+    }
 }
