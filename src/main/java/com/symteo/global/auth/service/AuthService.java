@@ -1,10 +1,12 @@
-package com.symteo.domain.auth.service;
+package com.symteo.global.auth.service;
 
-import com.symteo.domain.auth.dto.AuthResponse;
-import com.symteo.domain.auth.repository.UserTokenRepository;
+import com.symteo.global.auth.dto.AuthResponse;
+import com.symteo.global.auth.repository.UserTokenRepository;
 import com.symteo.domain.user.entity.User;
 import com.symteo.domain.user.entity.UserTokens;
 import com.symteo.domain.user.repository.UserRepository;
+import com.symteo.global.ApiPayload.exception.GeneralException;
+import com.symteo.global.ApiPayload.status.ErrorStatus;
 import com.symteo.global.jwt.JwtProvider;
 import com.symteo.global.oauth.info.SocialUserInfo;
 import com.symteo.global.oauth.service.SocialLoadStrategy;
@@ -27,21 +29,43 @@ public class AuthService {
 
     @Transactional
     public AuthResponse login(String provider, String accessToken) {
-        // 1. 소셜 서버에서 사용자 정보(식별자) 가져오기
+        // 1. DB에서 사용자 정보(식별자) 가져오기
         SocialUserInfo socialUser = socialLoadStrategy.getSocialInfo(provider, accessToken);
 
-        // 2. DB 조회 (없으면 회원가입, 있으면 로그인)
+        // 2. DB에서 유저 조회
+        // 회원 탈퇴한 유저도 조회 가능
         User user = userRepository.findBySocialTypeAndSocialId(socialUser.getSocialType(), socialUser.getSocialId())
-                .orElseGet(() -> registerUser(socialUser));
+                .orElse(null);
 
-        // 3. 앱 전용 토큰(JWT) 발급
+        // 3. 회원가입 or 로그인
+        // CASE 1: 아예 없는 유저라면 -> 회원가입 진행
+        if (user == null) {
+            user = registerUser(socialUser);
+        }
+
+        // CASE 2: 탈퇴 이력이 있는 유저 (Soft Delete 상태)
+        else if (user.getDeletedAt() != null) {
+            LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
+
+            // A. 탈퇴한 지 7일이 아직 안 지남 -> 재가입 불가 (에러)
+            if (user.getDeletedAt().isAfter(sevenDaysAgo)) {
+                throw new GeneralException(ErrorStatus._WITHDRAWAL_RESTRICTION);
+            }
+
+            // B. 탈퇴한 지 7일이 지남 -> 완전 삭제 후 신규 가입 처리
+            userRepository.delete(user);
+            userRepository.flush();
+            user = registerUser(socialUser);
+        }
+
+        // 4. 앱 전용 토큰(JWT) 발급
         String appAccessToken = jwtProvider.createAccessToken(user.getId(), user.getRole());
         String appRefreshToken = jwtProvider.createRefreshToken(user.getId());
 
-        // 4. Refresh Token 저장
+        // 5. Refresh Token 저장
         saveRefreshToken(user, appRefreshToken);
 
-        // 5. 응답 생성
+        // 6. 응답 생성
         return AuthResponse.builder()
                 .accessToken(appAccessToken)
                 .refreshToken(appRefreshToken)
@@ -104,5 +128,27 @@ public class AuthService {
                 .userId(user.getId())
                 .nickname(user.getNickname())
                 .build();
+    }
+
+    @Transactional
+    public void logout(String refreshToken) {
+        UserTokens token = userTokenRepository.findByRefreshToken(refreshToken)
+                .orElseThrow(() -> new GeneralException(ErrorStatus._TOKEN_NOT_FOUND));
+
+        userTokenRepository.delete(token);
+    }
+
+    @Transactional
+    public void withdraw(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus._MEMBER_NOT_FOUND));
+
+        if (user.getDeletedAt() != null) {
+            throw new GeneralException(ErrorStatus._BAD_REQUEST);
+        }
+
+        user.deleteSoftly();
+
+        userTokenRepository.deleteAllByUserId(userId);
     }
 }
