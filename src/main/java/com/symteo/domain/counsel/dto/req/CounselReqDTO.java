@@ -11,6 +11,7 @@ public class CounselReqDTO {
     ){}
 
     // 사용자의 AI 상담 요약 요청
+    // '종료하기' 누를 때 AI에게 ChatRoom의 전체 채팅 내역을 보낼 때 사용
     public record ChatSummary(
             Long userId,
             Long chatRoomId
