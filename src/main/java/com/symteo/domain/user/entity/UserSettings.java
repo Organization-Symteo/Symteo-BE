@@ -59,3 +59,4 @@ public class UserSettings {
         this.isLockEnabled = isEnabled;
     }
 }
+
