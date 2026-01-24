@@ -46,8 +46,8 @@ jobs:
               --name symteo-server \
               -p 8080:8080 \
               -e DB_URL="${{ secrets.DB_URL }}" \
-              -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
               -e DB_USERNAME="${{ secrets.DB_USERNAME }}" \
+              -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
               -e DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
               -e OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
               -e GOOGLE_CLIENT_ID="${{ secrets.GOOGLE_CLIENT_ID }}" \
