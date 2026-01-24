@@ -5,10 +5,11 @@ import com.symteo.domain.counsel.dto.res.CounselResDTO;
 import com.symteo.domain.counsel.service.CounselCommandService;
 import com.symteo.domain.counsel.service.CounselQueryService;
 import com.symteo.global.ApiPayload.ApiResponse;
-import com.symteo.global.ApiPayload.status.SuccessStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -17,13 +18,13 @@ import org.springframework.web.bind.annotation.*;
 public class CounselController {
 
     private final CounselCommandService counselCommandService;
+    private final CounselQueryService counselQueryService;
 
     // AI 상담 요청 보내기
     @PostMapping("/request")
     public ApiResponse<CounselResDTO.ChatMessage> askAI(
             @RequestBody CounselReqDTO.ChatMessage dto
     ){
-        log.info(">>>> 컨트롤러 진입 성공! DTO: {}", dto);
         return ApiResponse.onSuccess(counselCommandService.askCounsel(dto));
     }
 
@@ -34,4 +35,30 @@ public class CounselController {
     ){
         return ApiResponse.onSuccess(counselCommandService.summaryCounsel(dto));
     }
+
+    // 전체 상담 조회하기
+    // 나중에 Spring JWT에서 토큰 속 id를 찾자
+    @GetMapping("/all")
+    public ApiResponse<List<CounselResDTO.Chat>> getALlChat(
+            @RequestParam Long userId
+    ){
+        return ApiResponse.onSuccess(counselQueryService.readAllChat(userId));
+    }
+
+    // 단일 상담 조회하기
+    @GetMapping("/{counselId}")
+    public ApiResponse<CounselResDTO.ChatSummary> getChat(
+            @PathVariable Long counselId
+    ){
+        return ApiResponse.onSuccess(counselQueryService.readChat(counselId));
+    }
+
+    // 상담 삭제하기
+    @DeleteMapping("/{counselId}")
+    public ApiResponse<Long> deleteChat(
+            @PathVariable Long counselId
+    ){
+        return ApiResponse.onSuccess(counselCommandService.deleteChat(counselId));
+    }
+
 }

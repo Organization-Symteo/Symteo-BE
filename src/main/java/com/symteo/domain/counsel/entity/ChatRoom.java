@@ -15,19 +15,25 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class ChatRoom {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long chatroom_id;
+    private Long chatroomId;
 
     //채팅 사용자
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    //채팅 요약
-    @Column(name = "chatsummary")
+    //전체 채팅 요약
+    @Column(name = "chat_summary")
     private String chatSummary;
+
+    @Column(name = "ai_summary")
+    private String aiSummary;
+
+    @Column(name = "user_summary")
+    private String userSummary;
 
     //연관 관계
     @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL)

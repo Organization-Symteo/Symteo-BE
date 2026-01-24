@@ -40,7 +40,7 @@ class CounselCommandServiceImplTest {
     void askCounsel_WithNewChatRoom() {
         // given
         CounselReqDTO.ChatMessage reqDto = new CounselReqDTO.ChatMessage(1L, null, "안녕하세요 AI님!");
-        ChatRoom mockChatRoom = ChatRoom.builder().chatroom_id(100L).build();
+        ChatRoom mockChatRoom = ChatRoom.builder().chatroomId(100L).build();
 
         // ChatClient 모킹 (Fluent API 대응을 위해 Deep Stubs 설정처럼 동작하게 함)
         ChatClient.ChatClientRequestSpec mockSpec = mock(ChatClient.ChatClientRequestSpec.class);
