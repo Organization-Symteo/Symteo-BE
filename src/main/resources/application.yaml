@@ -62,13 +62,9 @@ springdoc:
   default-produces-media-type: application/json
 
 jwt:
-<<<<<<< Updated upstream
-  secret: "vmfhalwtptkdgoqjfrktyjsskfdyrgnwjdqkqhdtlsfhqptwwkd" # 임의의 긴 문자열
-=======
   secret: ${jwt_secret}
 
 # 앱 버전 정보
 app:
   version: 0.0.1
 
->>>>>>> Stashed changes
