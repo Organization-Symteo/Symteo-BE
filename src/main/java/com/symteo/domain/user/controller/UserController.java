@@ -27,7 +27,6 @@ public class UserController {
         return ApiResponse.onSuccess(new NicknameCheckResponse(isDuplicated));
     }
 
-
     // 회원가입 완료 (닉네임 설정) API
     @PostMapping("/signup")
     public ApiResponse<AuthResponse> completeSignUp(
