@@ -1,4 +1,4 @@
-package com.symteo.domain.auth.dto;
+package com.symteo.global.auth.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
