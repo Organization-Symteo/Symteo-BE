@@ -8,7 +8,7 @@ CREATE TABLE `chat_rooms` (
                               `updated_at`    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                               `deleted_at`    DATETIME NULL,
                               PRIMARY KEY (`chatroom_id`),
-                              CONSTRAINT `fk_chat_rooms_user_id` FOREIGN KEY (`user_id`) REFERENCES `Users` (`users_id`)
+                              CONSTRAINT `fk_chat_rooms_user_id` FOREIGN KEY (`user_id`) REFERENCES `users` (`users_id`)
 );
 
 CREATE TABLE `chat_messages` (

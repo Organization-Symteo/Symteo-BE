@@ -1,3 +1,3 @@
-ALTER TABLE User_missions
+ALTER TABLE user_missions
 DROP COLUMN mu_contents;
 

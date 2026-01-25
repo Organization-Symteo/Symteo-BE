@@ -36,6 +36,15 @@ out/
 ### VS Code ###
 .vscode/
 
+### macOS ###
+.DS_Store
+
 ## env ##
 .env
 src/main/resources/key.txt
+
+## SQL files ##
+*.sql
+
+# Flyway migration 파일은 예외 -> git에 포함시켜야 함!!
+!src/main/resources/db/migration/*.sql
