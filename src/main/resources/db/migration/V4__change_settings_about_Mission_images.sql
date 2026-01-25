@@ -1,0 +1,2 @@
+ALTER TABLE `Mission_images`
+    MODIFY COLUMN `image_url` TEXT NULL;

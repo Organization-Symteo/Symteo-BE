@@ -29,19 +29,26 @@ public class MissionController {
         );
     }
 
-    // 오늘의 미션 제출 시작
+    // 오늘의 미션 제출 시작 (이미지 제출 병합)
     @PostMapping("/{missionId}/start")
     public ApiResponse<UserMissionStartResponse> startMission(
             @PathVariable Long missionId,
-            @AuthenticationPrincipal Long userId
+            @AuthenticationPrincipal Long userId,
+            @RequestBody(required = false) UserMissionStartRequest request
     ) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus._MEMBER_NOT_FOUND));
 
         return ApiResponse.onSuccess(
-                missionService.startMission(missionId, user)
+                missionService.startMission(
+                        missionId,
+                        user,
+                        request == null ? null : request.getContents(),
+                        request == null ? null : request.getImageUrl()
+                )
         );
     }
+
 
     // 오늘의 미션 임시저장
     @PostMapping("/{userMissionId}/draft")
@@ -52,18 +59,6 @@ public class MissionController {
     ) {
         return ApiResponse.onSuccess(
                 missionService.saveDraft(userMissionId, userId, request.getContents())
-        );
-    }
-
-    // 오늘의 미션 이미지 추가
-    @PostMapping("/{userMissionId}/image")
-    public ApiResponse<ImageSaveResponse> saveimage(
-            @PathVariable Long userMissionId,
-            @AuthenticationPrincipal Long userId,
-            @RequestBody ImageSaveRequest request
-    ) {
-    return ApiResponse.onSuccess(
-            missionService.saveImage(userMissionId, userId, request.getImageUrl())
         );
     }
 }
