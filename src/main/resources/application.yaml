@@ -62,7 +62,7 @@ springdoc:
   default-produces-media-type: application/json
 
 jwt:
-  secret: ${jwt_secret}
+  secret: ${JWT_SECRET}
 
 # 앱 버전 정보
 app:
