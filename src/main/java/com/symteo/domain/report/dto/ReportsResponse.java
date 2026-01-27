@@ -1,5 +1,6 @@
 package com.symteo.domain.report.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -23,11 +24,17 @@ public class ReportsResponse {
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class ReportDetail {
         private Long reportId;
         private String testType;
-        private String aiContents;
-        private Object scores; // DepressionReports 혹은 AnxietyReports의 점수 데이터
+
+        // AI 분석글을 도메인별로 분리
+        private String depressionAiContent;
+        private String anxietyAiContent;
+
+        private Object depressionScores;
+        private Object anxietyScores;
         private LocalDateTime createdAt;
     }
 }
