@@ -1,4 +1,5 @@
 package com.symteo.domain.user.service;
+import com.sun.jdi.request.DuplicateRequestException;
 import com.symteo.global.auth.dto.AuthResponse;
 import com.symteo.global.auth.repository.UserTokenRepository;
 import com.symteo.domain.user.dto.UpdateNicknameRequest;
@@ -64,7 +65,7 @@ public class UserService {
 
         // 2. 닉네임 중복 재검사 (안전장치)
         if (checkNicknameDuplication(request.getNickname())) {
-            throw new GeneralException(ErrorStatus._NICKNAME_DUPLICATED);
+            throw new GeneralException(ErrorStatus._NICKNAME_CONFLICT);
         }
 
         // 3. 닉네임 업데이트 및 권한 승격 (GUEST -> USER)
