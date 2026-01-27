@@ -66,6 +66,10 @@ dependencies {
 	// Spring AI
 	implementation platform("org.springframework.ai:spring-ai-bom:1.0.0-M5")
 	implementation 'org.springframework.ai:spring-ai-openai-spring-boot-starter'
+
+    // AWS S3 SDK
+    implementation 'com.amazonaws:aws-java-sdk-s3:1.12.696'
+
 }
 
 tasks.named('test') {
