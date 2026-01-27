@@ -29,24 +29,27 @@ public class UserMissions {
     @JoinColumn(name = "mission_id", nullable = false)
     private Missions missions;
 
+    @Column(name = "completed_at")
     private LocalDateTime completedAt;
 
     @Column(name = "is_completed", nullable = false)
-    private boolean isCompleted;
+    private boolean isCompleted = false;
 
     @Column(name = "is_drafted", nullable = false)
-    private boolean isDrafted;
+    private boolean isDrafted = false;
 
     @Builder
     public UserMissions(User user, Missions missions) {
         this.user = user;
         this.missions = missions;
-        this.isCompleted = false;
-        this.isDrafted = false;
     }
 
     public void markDrafted() {
         this.isDrafted = true;
     }
 
+    public void complete() {
+        this.isCompleted = true;
+        this.completedAt = LocalDateTime.now();
+    }
 }

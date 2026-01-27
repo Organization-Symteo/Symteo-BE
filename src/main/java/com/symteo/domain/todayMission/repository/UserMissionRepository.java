@@ -10,4 +10,6 @@ import java.util.Optional;
 public interface UserMissionRepository extends JpaRepository<UserMissions, Long> {
 
     Optional<UserMissions> findByUserAndMissions(User user, Missions missions);
+    Optional<UserMissions> findByUserMissionIdAndUser(Long userMissionId, User user);
+
 }

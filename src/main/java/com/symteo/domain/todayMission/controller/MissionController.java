@@ -53,4 +53,16 @@ public class MissionController {
                 missionService.saveDraft(userMissionId, userId, request.getContents())
         );
     }
+
+    // 오늘의 미션 완료 처리
+    @PostMapping("/{userMissionId}/completed")
+    public ApiResponse<UserMissionCompletedResponse> saveCompletedMission(
+            @PathVariable Long userMissionId,
+            @AuthenticationPrincipal Long userId
+    ) {
+        return ApiResponse.onSuccess(
+                missionService.saveCompletedMission(userMissionId, userId)
+        );
+    }
+
 }

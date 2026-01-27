@@ -2,6 +2,7 @@ package com.symteo.domain.todayMission.service;
 
 import com.symteo.domain.todayMission.dto.DraftSaveResponse;
 import com.symteo.domain.todayMission.dto.MissionResponse;
+import com.symteo.domain.todayMission.dto.UserMissionCompletedResponse;
 import com.symteo.domain.todayMission.dto.UserMissionStartResponse;
 import com.symteo.domain.todayMission.entity.Missions;
 import com.symteo.domain.todayMission.entity.mapping.Drafts;
@@ -37,6 +38,9 @@ public class MissionService {
 
     // 오늘의 미션 조회 api
     public MissionResponse getTodayMission(Long userId) {
+
+        userRepository.findById(userId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus._MEMBER_NOT_FOUND));
 
         LocalDateTime startOfToday = LocalDateTime.now().toLocalDate().atStartOfDay();
         LocalDateTime endOfToday = startOfToday.plusDays(1);
@@ -138,13 +142,12 @@ public class MissionService {
                     .build();
         }
 
-        UserMissions userMission = userMissionRepository.findById(userMissionId)
-                .orElseThrow(() -> new GeneralException(ErrorStatus._USER_MISSION_NOT_FOUND));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus._MEMBER_NOT_FOUND));
 
-        // 사용자 검증 (인증)
-        if (!userMission.getUser().getId().equals(userId)) {
-            throw new GeneralException(ErrorStatus._FORBIDDEN);
-        }
+        UserMissions userMission =
+                userMissionRepository.findByUserMissionIdAndUser(userMissionId, user)
+                        .orElseThrow(() -> new GeneralException(ErrorStatus._USER_MISSION_NOT_FOUND));
 
         Drafts draft = draftRepository.findTopByUserMissions(userMission)
                 .orElse(null);
@@ -168,4 +171,26 @@ public class MissionService {
                 .updatedAt(draft.getUpdatedAt())
                 .build();
     }
+
+    // 오늘의 미션 완료 처리 api
+    @Transactional
+    public UserMissionCompletedResponse saveCompletedMission(
+            Long userMissionId,
+            Long userId
+    ) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus._MEMBER_NOT_FOUND));
+
+        UserMissions userMission =
+                userMissionRepository.findByUserMissionIdAndUser(userMissionId, user)
+                        .orElseThrow(() -> new GeneralException(ErrorStatus._USER_MISSION_NOT_FOUND));
+
+        userMission.complete();
+
+        return UserMissionCompletedResponse.builder()
+                .userMissionId(userMission.getUserMissionId())
+                .isCompleted(true)
+                .build();
+    }
+
 }
