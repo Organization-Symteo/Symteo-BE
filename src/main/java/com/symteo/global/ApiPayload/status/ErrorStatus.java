@@ -38,7 +38,6 @@ public enum ErrorStatus implements BaseErrorCode {
 
     // 닉네임 중복 오류
     _NICKNAME_CONFLICT(HttpStatus.CONFLICT, "USER409", "이미 사용 중인 닉네임입니다."),
-    _NICKNAME_DUPLICATED(HttpStatus.CONFLICT, "USER409", "이미 사용 중인 닉네임입니다."),
 
     // AI 상담사 중복 오류
     COUNSELOR_ALREADY_EXISTS(HttpStatus.CONFLICT, "COUNSELOR409", "이미 상담사 설정이 존재합니다."),
