@@ -16,16 +16,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class DiagnoseReportService {
+public class DepressionAnxietyReportsService {
 
     private final UserRepository userRepository;
     private final ReportsRepository reportsRepository;
@@ -40,7 +37,9 @@ public class DiagnoseReportService {
                 .orElseThrow(() -> new GeneralException(ErrorStatus._MEMBER_NOT_FOUND));
 
         // 리포트가 이미 존재하면 생성 x, 내용 조회
-        Optional<Reports> existingReport = reportsRepository.findByDuplicateCheck(user, diagnose.getTestType(), diagnose.getCreatedAt());
+        Optional<Reports> existingReport = reportsRepository.findByDuplicateCheck(
+                user, diagnose.getTestType(), diagnose.getId());
+
         if (existingReport.isPresent()) {
             return ReportsResponse.CreateReportResult.builder()
                     .reportId(existingReport.get().getReportId())
@@ -51,6 +50,7 @@ public class DiagnoseReportService {
 
         Reports report = Reports.builder()
                 .user(user)
+                .diagnoseId(diagnose.getId())
                 .rType("DEPRESSION_ANXIETY_COMPLEX")
                 .build();
         reportsRepository.save(report);
@@ -89,7 +89,7 @@ public class DiagnoseReportService {
 
     // 우울/불안 리포트 조회 api
     @Transactional(readOnly = true)
-    public ReportsResponse.ReportDetail getReportDetail(Long reportId, Long userId) {
+    public ReportsResponse.DepressionAnxietyReportDetail getReportDetail(Long reportId, Long userId) {
         Reports report = reportsRepository.findById(reportId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus._REPORT_NOT_FOUND));
 
@@ -117,7 +117,7 @@ public class DiagnoseReportService {
             }
         }
 
-        return ReportsResponse.ReportDetail.builder()
+        return ReportsResponse.DepressionAnxietyReportDetail.builder()
                 .reportId(report.getReportId())
                 .testType(report.getRType())
                 .depressionAiContent(deAi)
@@ -128,7 +128,7 @@ public class DiagnoseReportService {
                 .build();
     }
 
-    // 수치 계산 로직
+    // 수치 계산 로직 - 우울/불안
     private DepressionReports processDepression(User user, Reports report, List<DiagnoseReqDTO.AnswerDTO> answers, int total) {
         int core = sumByNos(answers, 1, 2);
         int physical = sumByNos(answers, 3, 4, 5);
@@ -228,6 +228,7 @@ public class DiagnoseReportService {
         return answers.stream().filter(a -> a.questionNo() >= start && a.questionNo() <= end).mapToInt(a -> a.score().intValue()).sum();
     }
 
+    // 우울/불안
     private String calculateSeverity(int score, String type) {
         if ("PHQ-9".equals(type)) {
             if (score <= 4) return "최소";

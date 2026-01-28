@@ -21,6 +21,9 @@ public class Reports {
     @Column(name = "r_type")
     private String rType;
 
+    @Column(name = "diagnose_id")
+    private Long diagnoseId;
+
     private LocalDateTime createdAt;
     private LocalDateTime completedAt;
 

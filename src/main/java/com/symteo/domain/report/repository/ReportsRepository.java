@@ -12,9 +12,19 @@ import java.util.Optional;
 
 @Repository
 public interface ReportsRepository extends JpaRepository<Reports, Long> {
-    // 유저, 타입, 생성시간이 일치하는 리포트가 있는지 확인
-    @Query("SELECT r FROM Reports r WHERE r.user = :user AND r.rType = :rType AND r.createdAt = :createdAt")
+    // 유저, 타입, id가 일치하는 리포트가 있는지 확인
+    @Query("SELECT r FROM Reports r WHERE r.user = :user " +
+            "AND r.rType = :rType " +
+            "AND r.diagnoseId = :diagnoseId")
     Optional<Reports> findByDuplicateCheck(
+            @Param("user") User user,
+            @Param("rType") String rType,
+            @Param("diagnoseId") Long diagnoseId
+    );
+
+    // 해당 유저의 이전 리포트 기록 조회
+    @Query("SELECT r FROM Reports r WHERE r.user = :user AND r.rType = :rType AND r.createdAt < :createdAt ORDER BY r.createdAt DESC LIMIT 1")
+    Optional<Reports> findLastReport(
             @Param("user") User user,
             @Param("rType") String rType,
             @Param("createdAt") LocalDateTime createdAt
