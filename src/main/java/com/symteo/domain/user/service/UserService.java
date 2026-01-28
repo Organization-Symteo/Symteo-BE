@@ -120,7 +120,7 @@ public class UserService {
 
         // 닉네임 중복 검사
         if (checkNicknameDuplication(request.getNickname())) {
-            throw new GeneralException(ErrorStatus._NICKNAME_DUPLICATED);
+            throw new GeneralException(ErrorStatus._NICKNAME_CONFLICT);
         }
 
         // 닉네임 업데이트
