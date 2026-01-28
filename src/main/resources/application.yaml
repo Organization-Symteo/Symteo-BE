@@ -42,7 +42,7 @@ logging:
 
 oauth:
   google:
-    client-id: ${google_client_id}
+    client-id: ${GOOGLE_CLIENT_ID}
     user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
 
   naver:
@@ -70,7 +70,7 @@ cloud:
       access-key: ${AWS_ACCESS_KEY_ID}
       secret-key: ${AWS_SECRET_ACCESS_KEY}
     region:
-      static: ap-northeast-2
+      static: ${AWS_REGION:ap-northeast-2}
     stack:
       auto: false
     s3:
