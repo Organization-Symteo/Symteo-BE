@@ -12,6 +12,14 @@ import java.util.Optional;
 
 @Repository
 public interface ReportsRepository extends JpaRepository<Reports, Long> {
+    // 리포트 조회(우울/불안)
+    @Query("SELECT r FROM Reports r " +
+            "LEFT JOIN FETCH r.depressionReport " +
+            "LEFT JOIN FETCH r.anxietyReport " +
+            "LEFT JOIN FETCH r.aiReport " +
+            "WHERE r.reportId = :reportId")
+    Optional<Reports> findReportWithDetails(@Param("reportId") Long reportId);
+
     // 유저, 타입, id가 일치하는 리포트가 있는지 확인
     @Query("SELECT r FROM Reports r WHERE r.user = :user " +
             "AND r.rType = :rType " +
