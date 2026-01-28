@@ -2,12 +2,8 @@ package com.symteo.domain.todayMission.controller;
 
 import com.symteo.domain.todayMission.dto.*;
 import com.symteo.domain.todayMission.service.MissionService;
-import com.symteo.domain.user.entity.User;
 import com.symteo.domain.user.repository.UserRepository;
 import com.symteo.global.ApiPayload.ApiResponse;
-import com.symteo.global.ApiPayload.exception.GeneralException;
-import com.symteo.global.ApiPayload.status.ErrorStatus;
-import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -71,18 +67,13 @@ public class MissionController {
         );
     }
 
-    // 오늘 미션 자동 생성 테스트 api
-    @Operation(summary = "미션 수동 생성 테스트 API", description = "호출 시 해당 유저의 미션을 즉시 생성합니다.")
-    @GetMapping("/test/generate")
-    public ApiResponse<String> testGenerateMission(@AuthenticationPrincipal Long userId) {
-        // 1. 현재 로그인한 유저 정보 가져오기
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new GeneralException(ErrorStatus._MEMBER_NOT_FOUND));
-
-        // 2. 미션 생성 로직 강제 호출
-        missionService.generateMissionForUser(user);
-
-        return ApiResponse.onSuccess("미션 생성 성공! DB의 user_missions 테이블을 확인하세요.");
+    // 오늘 미션 새로고침 API
+    @PatchMapping("/today-mission/restart")
+    public ApiResponse<MissionResponse> refreshTodayMission(
+            @AuthenticationPrincipal Long userId
+    ) {
+        return ApiResponse.onSuccess(
+                missionService.refreshTodayMission(userId)
+        );
     }
-
 }

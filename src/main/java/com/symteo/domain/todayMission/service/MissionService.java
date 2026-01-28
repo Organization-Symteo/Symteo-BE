@@ -114,11 +114,7 @@ public class MissionService {
                 0
         );
 
-        return MissionResponse.builder()
-                .contents(mission.getMissionContents())
-                .remainingSeconds(remainingSeconds)
-                .isRestarted(mission.isRestarted())
-                .build();
+        return MissionResponse.from(userMission, remainingSeconds);
     }
 
     // 오늘의 미션 시작 api
@@ -189,5 +185,44 @@ public class MissionService {
                 .userMissionId(userMission.getUserMissionId())
                 .isCompleted(true)
                 .build();
+    }
+
+    // 새로고침 api
+    @Transactional
+    public MissionResponse refreshTodayMission(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus._MEMBER_NOT_FOUND));
+
+        // 1. 오늘 할당된 미션 조회
+        UserMissions userMission = userMissionRepository.findTopByUserOrderByUserMissionIdDesc(user)
+                .orElseThrow(() -> new GeneralException(ErrorStatus._MISSION_NOT_FOUND));
+
+        // 2. 하루 1회 제한 체크 (이미 새로고침 했는지 확인)
+        if (userMission.isRestarted()) {
+            throw new GeneralException(ErrorStatus._MISSION_REFRESH_EXCEEDED);
+        }
+
+        // 3. 완료된 미션은 새로고침 불가
+        if (userMission.isCompleted()) {
+            throw new GeneralException(ErrorStatus._MISSION_ALREADY_COMPLETED);
+        }
+
+        // 4. 현재 카테고리 유지하면서 중복 제외하고 다른 미션 찾기
+        String currentCategory = userMission.getMissions().getCategory();
+        List<Long> excludeIds = userMissionRepository.findCompletedMissionIds(userId);
+        excludeIds.add(userMission.getMissions().getMissionId());
+
+        Missions newMission = missionRepository.findRandomByCategory(currentCategory, excludeIds)
+                .orElseThrow(() -> new GeneralException(ErrorStatus._NO_MORE_MISSIONS));
+
+        // 5. 엔티티 업데이트 (is_restarted = true 반영)
+        userMission.refresh(newMission);
+
+        long remainingSeconds = Math.max(
+                Duration.between(LocalDateTime.now(), newMission.getDeadLine()).getSeconds(),
+                0
+        );
+
+        return MissionResponse.from(userMission, remainingSeconds);
     }
 }

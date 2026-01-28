@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-@Table(name = "missions")
+@Table(name = "Missions")
 public class Missions {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,7 +19,7 @@ public class Missions {
     private Long missionId;
 
     @Column(name = "category", nullable = false)
-    private String category; // BASIC, DEP_ANX, STRESS
+    private String category;
 
     @Column(name = "sub_category")
     private String subCategory;
@@ -33,12 +33,4 @@ public class Missions {
 
     @Column(name = "dead_line", nullable = false)
     private LocalDateTime deadLine;
-
-    @Builder.Default
-    @Column(name = "is_restarted", nullable = false)
-    private boolean isRestarted = false;
-
-    @Builder.Default
-    @Column(name = "is_drafted", nullable = false)
-    private boolean isDrafted = false;
 }

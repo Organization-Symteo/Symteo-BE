@@ -180,8 +180,6 @@ public class MissionDataInitializer {
                     .subCategory(sub)
                     .missionContents(content)
                     .deadLine(LocalDateTime.of(9999, 12, 31, 23, 59)) // 템플릿용 미래 기한
-                    .isRestarted(false)
-                    .isDrafted(false)
                     .build());
         }
     }
