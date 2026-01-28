@@ -15,10 +15,9 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "user_missions")
 public class UserMissions {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "u_mission_id", nullable = false)
+    @Column(name = "u_mission_id")
     private Long userMissionId;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -42,12 +41,11 @@ public class UserMissions {
     public UserMissions(User user, Missions missions) {
         this.user = user;
         this.missions = missions;
+        this.isCompleted = false;
+        this.isDrafted = false;
     }
 
-    public void markDrafted() {
-        this.isDrafted = true;
-    }
-
+    public void markDrafted() { this.isDrafted = true; }
     public void complete() {
         this.isCompleted = true;
         this.completedAt = LocalDateTime.now();

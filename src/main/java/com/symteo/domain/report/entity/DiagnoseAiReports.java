@@ -7,7 +7,7 @@ import lombok.*;
 @Getter @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-@Table(name = "diagnose_ai_reports")
+@Table(name = "Diagnose_ai_reports")
 public class DiagnoseAiReports {
 
     @Id

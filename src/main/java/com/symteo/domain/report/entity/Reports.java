@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Getter @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-@Table(name = "reports")
+@Table(name = "Reports")
 public class Reports {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long reportId;

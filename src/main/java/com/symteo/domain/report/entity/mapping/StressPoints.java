@@ -9,7 +9,7 @@ import lombok.*;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-@Table(name = "stress_points")
+@Table(name = "Stress_points")
 public class StressPoints {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
