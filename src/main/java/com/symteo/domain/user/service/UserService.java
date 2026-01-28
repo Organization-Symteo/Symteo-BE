@@ -1,12 +1,10 @@
 package com.symteo.domain.user.service;
 import com.sun.jdi.request.DuplicateRequestException;
+import com.symteo.domain.counsel.entity.CounselorSettings;
+import com.symteo.domain.counsel.repository.CounselorSettingRepository;
 import com.symteo.global.auth.dto.AuthResponse;
 import com.symteo.global.auth.repository.UserTokenRepository;
-import com.symteo.domain.user.dto.UpdateNicknameRequest;
-import com.symteo.domain.user.dto.UpdateUserSettingsRequest;
-import com.symteo.domain.user.dto.UserProfileResponse;
-import com.symteo.domain.user.dto.UserSettingsResponse;
-import com.symteo.domain.user.dto.UserSignUpRequest;
+import com.symteo.domain.user.dto.*;
 import com.symteo.domain.user.entity.User;
 import com.symteo.domain.user.entity.UserSettings;
 import com.symteo.domain.user.entity.UserTokens;
@@ -31,6 +29,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserTokenRepository userTokenRepository;
     private final UserSettingsRepository userSettingsRepository;
+    private final CounselorSettingRepository counselorSettingRepository;
     private final JwtProvider jwtProvider;
 
     @Value("${app.version:0.0.1}")
@@ -186,5 +185,48 @@ public class UserService {
                 .build();
         return userSettingsRepository.save(settings);
     }
-}
 
+    // AI 상담사 설정 조회
+    public CounselorSettingsResponse getCounselorSettings(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus._MEMBER_NOT_FOUND));
+
+        CounselorSettings settings = counselorSettingRepository.findById(userId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.COUNSELOR_NOT_FOUND));
+
+        return CounselorSettingsResponse.of(
+                settings.getAtmosphere(),
+                settings.getSupportStyle(),
+                settings.getRoleCounselor(),
+                settings.getAnswerFormat()
+        );
+    }
+
+    // AI 상담사 설정 수정
+    @Transactional
+    public CounselorSettingsResponse updateCounselorSettings(Long userId, UpdateCounselorSettingsRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus._MEMBER_NOT_FOUND));
+
+        CounselorSettings settings = counselorSettingRepository.findById(userId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.COUNSELOR_NOT_FOUND));
+
+        // 엔티티에 업데이트 메서드x -> 새로 생성해서 저장하기...
+        CounselorSettings updatedSettings = CounselorSettings.builder()
+                .user(user)
+                .atmosphere(request.getAtmosphere() != null ? request.getAtmosphere() : settings.getAtmosphere())
+                .supportStyle(request.getSupportStyle() != null ? request.getSupportStyle() : settings.getSupportStyle())
+                .roleCounselor(request.getRoleCounselor() != null ? request.getRoleCounselor() : settings.getRoleCounselor())
+                .answerFormat(request.getAnswerFormat() != null ? request.getAnswerFormat() : settings.getAnswerFormat())
+                .build();
+
+        counselorSettingRepository.save(updatedSettings);
+
+        return CounselorSettingsResponse.of(
+                updatedSettings.getAtmosphere(),
+                updatedSettings.getSupportStyle(),
+                updatedSettings.getRoleCounselor(),
+                updatedSettings.getAnswerFormat()
+        );
+    }
+}

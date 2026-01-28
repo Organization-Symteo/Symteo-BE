@@ -1,11 +1,7 @@
 package com.symteo.domain.user.controller;
 
 import com.symteo.global.auth.dto.AuthResponse;
-import com.symteo.domain.user.dto.UpdateNicknameRequest;
-import com.symteo.domain.user.dto.UpdateUserSettingsRequest;
-import com.symteo.domain.user.dto.UserProfileResponse;
-import com.symteo.domain.user.dto.UserSettingsResponse;
-import com.symteo.domain.user.dto.UserSignUpRequest;
+import com.symteo.domain.user.dto.*;
 import com.symteo.domain.user.service.UserService;
 import com.symteo.global.ApiPayload.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -69,6 +65,25 @@ public class UserController {
             @RequestBody UpdateUserSettingsRequest request
     ) {
         UserSettingsResponse response = userService.updateUserSettings(userId, request);
+        return ApiResponse.onSuccess(response);
+    }
+
+    // AI 상담사 설정 조회 API
+    @GetMapping("/counselor-settings")
+    public ApiResponse<CounselorSettingsResponse> getCounselorSettings(
+            @AuthenticationPrincipal Long userId
+    ) {
+        CounselorSettingsResponse response = userService.getCounselorSettings(userId);
+        return ApiResponse.onSuccess(response);
+    }
+
+    // AI 상담사 설정 수정 API
+    @PatchMapping("/counselor-settings")
+    public ApiResponse<CounselorSettingsResponse> updateCounselorSettings(
+            @AuthenticationPrincipal Long userId,
+            @RequestBody UpdateCounselorSettingsRequest request
+    ) {
+        CounselorSettingsResponse response = userService.updateCounselorSettings(userId, request);
         return ApiResponse.onSuccess(response);
     }
 
