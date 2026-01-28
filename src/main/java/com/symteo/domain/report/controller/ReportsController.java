@@ -3,6 +3,7 @@ package com.symteo.domain.report.controller;
 import com.symteo.domain.diagnose.entity.Diagnose;
 import com.symteo.domain.diagnose.repository.DiagnoseRepository;
 import com.symteo.domain.report.dto.ReportsResponse;
+import com.symteo.domain.report.service.AttachmentReportsService;
 import com.symteo.domain.report.service.DepressionAnxietyReportsService;
 import com.symteo.domain.report.service.StressReportsService;
 import com.symteo.global.ApiPayload.ApiResponse;
@@ -20,6 +21,7 @@ public class ReportsController {
     private final DepressionAnxietyReportsService depressionAnxietyReportsService;
     private final DiagnoseRepository diagnoseRepository;
     private final StressReportsService stressReportsService;
+    private final AttachmentReportsService attachmentReportsService;
 
     // 우울/불안 리포트 생성
     @PostMapping("/depression-anxiety/{diagnoseId}")
@@ -61,5 +63,26 @@ public class ReportsController {
             @AuthenticationPrincipal Long userId
     ) {
         return ApiResponse.onSuccess(stressReportsService.getReportDetail(reportId, userId));
+    }
+
+    // 성향 리포트 생성
+    @PostMapping("/attachment/{diagnoseId}")
+    public ApiResponse<ReportsResponse.CreateReportResult> createAttachment(
+            @PathVariable Long diagnoseId,
+            @AuthenticationPrincipal Long userId
+    ) {
+        Diagnose diagnose = diagnoseRepository.findById(diagnoseId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus._DIAGNOSE_NOT_FOUND));
+
+        return ApiResponse.onSuccess(attachmentReportsService.analyzeAndSave(diagnose, userId));
+    }
+
+    // 성향 리포트 조회
+    @GetMapping("/attachment/{reportId}")
+    public ApiResponse<ReportsResponse.AttachmentReportDetail> getAttachmentDetail(
+            @PathVariable Long reportId,
+            @AuthenticationPrincipal Long userId
+    ) {
+        return ApiResponse.onSuccess(attachmentReportsService.getReportDetail(reportId, userId));
     }
 }

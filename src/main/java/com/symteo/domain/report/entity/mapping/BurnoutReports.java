@@ -14,7 +14,7 @@ public class BurnoutReports {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "bu_report_id") // DB 컬럼명과 정확히 매핑
-    private Long id;
+    private Long buReportId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "users_id")

@@ -1,7 +1,9 @@
 package com.symteo.domain.report.entity;
 
 import com.symteo.domain.report.entity.mapping.AnxietyReports;
+import com.symteo.domain.report.entity.mapping.AttachmentReports;
 import com.symteo.domain.report.entity.mapping.DepressionReports;
+import com.symteo.domain.report.entity.mapping.StressReports;
 import com.symteo.domain.user.entity.User;
 import jakarta.persistence.*; // jakarta로 통일
 import lombok.*;
@@ -37,6 +39,12 @@ public class Reports {
 
     @OneToOne(mappedBy = "report", fetch = FetchType.LAZY)
     private DiagnoseAiReports aiReport;
+
+    @OneToOne(mappedBy = "report", fetch = FetchType.LAZY)
+    private AttachmentReports attachmentReport;
+
+    @OneToOne(mappedBy = "report", fetch = FetchType.LAZY)
+    private StressReports stressReport;
 
     @PrePersist
     public void prePersist() { this.createdAt = LocalDateTime.now(); }

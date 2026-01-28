@@ -16,9 +16,7 @@ public class ReportsResponse {
         private LocalDateTime createdAt;
     }
 
-    /**
-     * 우울/불안 통합 리포트 상세 (Complex)
-     */
+    // 우울/불안 리포트 상세
     @Builder @Getter
     @NoArgsConstructor @AllArgsConstructor
     public static class DepressionAnxietyReportDetail {
@@ -73,9 +71,7 @@ public class ReportsResponse {
         private String title;
     }
 
-    /**
-     * 스트레스/번아웃 리포트 상세 (기존 유지)
-     */
+    // 스트레스/번아웃 리포트 상세
     @Builder @Getter
     @NoArgsConstructor @AllArgsConstructor
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -108,5 +104,42 @@ public class ReportsResponse {
         private String cynicismLevel;
         private String inefficacyLevel;
         private String totalLevel;
+    }
+
+    // 성향 리포트
+    @Builder @Getter @NoArgsConstructor @AllArgsConstructor
+    public static class AttachmentReportDetail {
+        private Long reportId;
+        private String userName;
+        private String attachmentType;
+
+        // 관계 지도 및 바 차트용 데이터
+        private AttachmentScore anxiety;
+        private AttachmentScore avoidance;
+
+        // 애착 분석 카드 데이터 (각 2개씩)
+        private List<AttachmentCard> stressPoints;
+        private List<AttachmentCard> strengthPoints;
+
+        // AI가 작성한 최종 리포트 본문 (3문단)
+        private String aiFullContent;
+        private String actionGuideSentence;
+
+        private LocalDateTime createdAt;
+    }
+
+    @Builder @Getter @NoArgsConstructor @AllArgsConstructor
+    public static class AttachmentScore {
+        private double score;
+        private int percentage;
+        private String stateLabel;
+        private String color;
+        private String stateComment;
+    }
+
+    @Builder @Getter @NoArgsConstructor @AllArgsConstructor
+    public static class AttachmentCard {
+        private String title;
+        private String description;
     }
 }

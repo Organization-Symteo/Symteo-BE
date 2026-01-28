@@ -12,8 +12,8 @@ import lombok.*;
 public class StressReports {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "st_report_id") // DB 컬럼명과 정확히 매핑 (기존 @JoinColumn에서 변경)
-    private Long id;
+    @Column(name = "st_report_id") // DB 컬럼명과 정확히 매핑
+    private Long stReportId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "users_id")

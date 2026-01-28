@@ -48,7 +48,6 @@ public class StressReportsService {
                     .build();
         }
 
-        // [수정] 빌더에 .diagnoseId(diagnose.getId()) 추가
         Reports report = Reports.builder()
                 .user(user)
                 .diagnoseId(diagnose.getId())
