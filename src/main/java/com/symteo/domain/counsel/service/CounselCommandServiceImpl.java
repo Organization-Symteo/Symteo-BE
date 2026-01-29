@@ -6,19 +6,26 @@ import com.symteo.domain.counsel.dto.req.CounselReqDTO;
 import com.symteo.domain.counsel.dto.res.CounselResDTO;
 import com.symteo.domain.counsel.entity.ChatMessage;
 import com.symteo.domain.counsel.entity.ChatRoom;
+import com.symteo.domain.counsel.entity.CounselorSettings;
 import com.symteo.domain.counsel.enums.Role;
 import com.symteo.domain.counsel.exception.code.CounselErrorCode;
 import com.symteo.domain.counsel.exception.code.CounselException;
 import com.symteo.domain.counsel.repository.ChatMessageRepository;
 import com.symteo.domain.counsel.repository.ChatRoomRepository;
+import com.symteo.domain.counsel.repository.CounselorSettingRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.messages.Message;
+import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.chat.prompt.SystemPromptTemplate;
 import org.springframework.ai.converter.BeanOutputConverter;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -30,6 +37,7 @@ public class CounselCommandServiceImpl implements CounselCommandService{
     private final ChatClient chatClient;
     private final ChatRoomRepository chatRoomRepository;
     private final ChatMessageRepository chatMessageRepository;
+    private final CounselorSettingRepository counselorSettingRepository;
 
     /// --- 1. 상담 요청 메소드
     @Override
@@ -46,13 +54,36 @@ public class CounselCommandServiceImpl implements CounselCommandService{
                 .orElseThrow(() -> new CounselException(CounselErrorCode._CHATROOM_NOT_FOUND));
 
         // 3. 생성된 ChatRoom에 유저 상담 질문을 ChatMessage로 변환 후 저장
+        // Prompt를 이용해 유저별 AI 상담사를 따로 만들어야함.
+
+        // 3-1. 사용자로부터 받은 메세지를 따로 저장
         ChatMessage chatMessage = CounselConverter.toChatMessage(question, chatRoom);
         chatMessageRepository.save(chatMessage);
+
+        // 3-2. 시스템 프롬프트를 만들기 위한 사용자 상담자 설정 조회
+        CounselorSettings settings = counselorSettingRepository.findById(userId)
+                .orElseThrow(() -> new CounselException(CounselErrorCode._SETTING_NOT_FOUND));
+
+        String systemText = """
+        당신은 사람들의 심리 상담을 도와주는 심리 상담 AI입니다.
+        당신의 대화 분위기는 {atmosphere} 으로 맞춰주세요.
+        당신의 도움 방식은 {support_style} 으로 설정해주세요.
+        당신의 역할은 {role} 입니다.
+        당신의 답변 형식은 {answer_format} 해야 합니다.
+        당신의 말투는 {tone} 으로 해주세요.
+        """;
 
         // 4. AI에게 상담 질문 요청
         String answer;
         try {
             answer = chatClient.prompt()
+                    .system(s -> s.text(systemText)
+                            .param("atmosphere", settings.getAtmosphere())
+                            .param("support_style", settings.getSupportStyle())
+                            .param("role", settings.getRoleCounselor())
+                            .param("answer_format", settings.getAnswerFormat())
+                            .param("tone", settings.getTone())
+                    )
                     .user(question)
                     .call()
                     .content();
@@ -83,9 +114,6 @@ public class CounselCommandServiceImpl implements CounselCommandService{
         List<ChatMessage> chatMessages = chatRoom.getChatMessages();
         List<ChatMessage> aiMessages = chatMessageRepository.findAllByChatRoom_ChatroomIdAndRole(dto.chatRoomId(), Role.AI);
         List<ChatMessage> userMessages = chatMessageRepository.findAllByChatRoom_ChatroomIdAndRole(dto.chatRoomId(), Role.USER);
-
-        // 2-1. 컨버터 설정 -> AI 답변 반환
-        var converter = new BeanOutputConverter<>(AISummaryDTO.ChatMessage.class);
 
         // 프롬프트 설정
         String promptText = """

@@ -1,9 +1,6 @@
 package com.symteo.domain.counsel.entity;
 
-import com.symteo.domain.counsel.enums.Answer_Format;
-import com.symteo.domain.counsel.enums.Atmosphere;
-import com.symteo.domain.counsel.enums.Counselor_Role;
-import com.symteo.domain.counsel.enums.Support_Style;
+import com.symteo.domain.counsel.enums.*;
 import com.symteo.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -39,5 +36,9 @@ public class CounselorSettings {
     @Column(name = "answer_format", nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
     private Answer_Format answerFormat;
+
+    @Column
+    @Enumerated(EnumType.STRING)
+    private Tone tone;
 
 }
