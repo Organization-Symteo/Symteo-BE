@@ -2,6 +2,11 @@ package com.symteo.domain.user.service;
 import com.sun.jdi.request.DuplicateRequestException;
 import com.symteo.domain.counsel.entity.CounselorSettings;
 import com.symteo.domain.counsel.repository.CounselorSettingRepository;
+import com.symteo.domain.todayMission.entity.mapping.MissionImages;
+import com.symteo.domain.todayMission.entity.mapping.UserMissions;
+import com.symteo.domain.todayMission.repository.DraftRepository;
+import com.symteo.domain.todayMission.repository.MissionImageRepository;
+import com.symteo.domain.todayMission.repository.UserMissionRepository;
 import com.symteo.global.auth.dto.AuthResponse;
 import com.symteo.global.auth.repository.UserTokenRepository;
 import com.symteo.domain.user.dto.*;
@@ -20,7 +25,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +37,9 @@ public class UserService {
     private final UserTokenRepository userTokenRepository;
     private final UserSettingsRepository userSettingsRepository;
     private final CounselorSettingRepository counselorSettingRepository;
+    private final UserMissionRepository userMissionRepository;
+    private final MissionImageRepository missionImageRepository;
+    private final DraftRepository draftRepository;
     private final JwtProvider jwtProvider;
 
     @Value("${app.version:0.0.1}")
@@ -228,5 +238,60 @@ public class UserService {
                 updatedSettings.getRoleCounselor(),
                 updatedSettings.getAnswerFormat()
         );
+    }
+
+    // 완료한 미션 리스트 조회
+    public MissionHistoryResponse.MissionListResponse getCompletedMissions(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus._MEMBER_NOT_FOUND));
+
+        List<UserMissions> completedMissions = userMissionRepository
+                .findByUserAndIsCompletedTrueOrderByCompletedAtDesc(user);
+
+        List<MissionHistoryResponse.MissionItem> missionItems = completedMissions.stream()
+                .map(userMission -> {
+                    boolean hasImage = !missionImageRepository
+                            .findByUserMissions(userMission)
+                            .isEmpty();
+
+                    return MissionHistoryResponse.MissionItem.builder()
+                            .userMissionId(userMission.getUserMissionId())
+                            .missionContents(userMission.getMissions().getMissionContents())
+                            .completedAt(userMission.getCompletedAt())
+                            .hasImage(hasImage)
+                            .build();
+                })
+                .collect(Collectors.toList());
+
+        return MissionHistoryResponse.MissionListResponse.of(missionItems);
+    }
+
+    // 특정 미션 상세 조회
+    public MissionHistoryResponse.MissionDetailResponse getMissionDetail(Long userId, Long userMissionId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus._MEMBER_NOT_FOUND));
+
+        UserMissions userMission = userMissionRepository.findByUserMissionIdAndUser(userMissionId, user)
+                .orElseThrow(() -> new GeneralException(ErrorStatus._USER_MISSION_NOT_FOUND));
+
+        // Draft 내용 조회
+        String draftContents = draftRepository.findTopByUserMissions(userMission)
+                .map(draft -> draft.getContents())
+                .orElse(null);
+
+        // 이미지 URL 리스트 조회
+        List<String> imageUrls = missionImageRepository.findByUserMissions(userMission)
+                .stream()
+                .map(MissionImages::getImageUrl)
+                .collect(Collectors.toList());
+
+        return MissionHistoryResponse.MissionDetailResponse.builder()
+                .userMissionId(userMission.getUserMissionId())
+                .missionContents(userMission.getMissions().getMissionContents())
+                .draftContents(draftContents)
+                .imageUrls(imageUrls)
+                .completedAt(userMission.getCompletedAt())
+                .isCompleted(userMission.isCompleted())
+                .build();
     }
 }

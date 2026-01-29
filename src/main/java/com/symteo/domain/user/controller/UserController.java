@@ -87,6 +87,25 @@ public class UserController {
         return ApiResponse.onSuccess(response);
     }
 
+    // 완료한 미션 리스트 조회 API (MY 심터)
+    @GetMapping("/missions/history")
+    public ApiResponse<MissionHistoryResponse.MissionListResponse> getCompletedMissions(
+            @AuthenticationPrincipal Long userId
+    ) {
+        MissionHistoryResponse.MissionListResponse response = userService.getCompletedMissions(userId);
+        return ApiResponse.onSuccess(response);
+    }
+
+    // 특정 미션 상세 조회 API (MY 심터)
+    @GetMapping("/missions/history/{userMissionId}")
+    public ApiResponse<MissionHistoryResponse.MissionDetailResponse> getMissionDetail(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long userMissionId
+    ) {
+        MissionHistoryResponse.MissionDetailResponse response = userService.getMissionDetail(userId, userMissionId);
+        return ApiResponse.onSuccess(response);
+    }
+
     // response DTO
     record NicknameCheckResponse(boolean isDuplicated) {}
 
