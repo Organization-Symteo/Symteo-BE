@@ -10,7 +10,7 @@ import lombok.*;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-@Table(name = "Attachment_reports")
+@Table(name = "attachment_reports")
 public class AttachmentReports {
 
     @Id

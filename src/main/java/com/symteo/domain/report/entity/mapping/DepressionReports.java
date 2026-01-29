@@ -11,7 +11,7 @@ import lombok.*;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-@Table(name = "Depression_reports")
+@Table(name = "depression_reports")
 public class DepressionReports {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)

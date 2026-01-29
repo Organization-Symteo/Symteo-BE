@@ -8,7 +8,7 @@ import lombok.*;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-@Table(name = "Strength")
+@Table(name = "strength")
 public class Strength {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
