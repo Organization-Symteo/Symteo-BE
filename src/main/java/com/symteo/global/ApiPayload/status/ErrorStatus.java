@@ -41,6 +41,7 @@ public enum ErrorStatus implements BaseErrorCode {
 
     // AI 상담사 중복 오류
     COUNSELOR_ALREADY_EXISTS(HttpStatus.CONFLICT, "COUNSELOR409", "이미 상담사 설정이 존재합니다."),
+    COUNSELOR_NOT_FOUND(HttpStatus.NOT_FOUND, "COUNSELOR404", "상담사 설정을 찾을 수 없습니다."),
     _WITHDRAWAL_RESTRICTION(HttpStatus.FORBIDDEN, "USER403", "탈퇴 후 7일간 재가입할 수 없습니다."),
     _TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "USER404", "토큰을 찾을 수 없습니다."),
 
