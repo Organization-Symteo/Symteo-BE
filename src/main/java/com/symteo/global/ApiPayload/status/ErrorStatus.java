@@ -24,6 +24,7 @@ public enum ErrorStatus implements BaseErrorCode {
     _MISSION_NOT_FOUND(HttpStatus.NOT_FOUND, "MISSION404","오늘의 미션이 없습니다."),
     _MISSION_EXPIRED(HttpStatus.GONE, "MISSION410", "미션 기한이 만료되었습니다."),
     _USER_MISSION_NOT_FOUND(HttpStatus.NOT_FOUND, "USER_MISSION404", "진행 중인 미션이 아닙니다."),
+    _DRAFT_NOT_FOUND(HttpStatus.NOT_FOUND, "DRAFT404", "작성된 내용이 없습니다."),
     _IMAGE_URL_MISSING(HttpStatus.BAD_REQUEST, "MISSION400", "선택된 이미지가 없습니다."),
     _IMAGE_UPLOAD_FAILED(HttpStatus.BAD_REQUEST, "MISSION400", "이미지 업로드에 실패했습니다."),
     _MISSION_REFRESH_EXCEEDED(HttpStatus.CONFLICT, "MISSION409", "이미 새로고침했습니다."),
