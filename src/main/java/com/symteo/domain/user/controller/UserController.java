@@ -8,6 +8,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -103,6 +106,18 @@ public class UserController {
             @PathVariable Long userMissionId
     ) {
         MissionHistoryResponse.MissionDetailResponse response = userService.getMissionDetail(userId, userMissionId);
+        return ApiResponse.onSuccess(response);
+    }
+
+    // 미션 내용 및 이미지 수정 API (MY 심터)
+    @PatchMapping("/missions/history/{userMissionId}")
+    public ApiResponse<UpdateMissionResponse> updateMission(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long userMissionId,
+            @RequestPart(required = false) UpdateMissionRequest request,
+            @RequestPart(required = false) List<MultipartFile> images
+    ) {
+        UpdateMissionResponse response = userService.updateMission(userId, userMissionId, request, images);
         return ApiResponse.onSuccess(response);
     }
 

@@ -24,4 +24,7 @@ public interface UserMissionRepository extends JpaRepository<UserMissions, Long>
     // MY 심터 미션 이력 조회
     List<UserMissions> findByUserAndIsCompletedTrueOrderByCompletedAtDesc(User user);
 
+    // 특정 미션 조회 (유저 확인)
+    Optional<UserMissions> findByUserMissionIdAndUser(Long userMissionId, User user);
+
 }

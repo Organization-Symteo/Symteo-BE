@@ -2,6 +2,7 @@ package com.symteo.domain.user.service;
 import com.sun.jdi.request.DuplicateRequestException;
 import com.symteo.domain.counsel.entity.CounselorSettings;
 import com.symteo.domain.counsel.repository.CounselorSettingRepository;
+import com.symteo.domain.todayMission.entity.mapping.Drafts;
 import com.symteo.domain.todayMission.entity.mapping.MissionImages;
 import com.symteo.domain.todayMission.entity.mapping.UserMissions;
 import com.symteo.domain.todayMission.repository.DraftRepository;
@@ -19,10 +20,12 @@ import com.symteo.domain.user.repository.UserSettingsRepository;
 import com.symteo.global.ApiPayload.exception.GeneralException;
 import com.symteo.global.ApiPayload.status.ErrorStatus;
 import com.symteo.global.jwt.JwtProvider;
+import com.symteo.global.s3.S3Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -41,6 +44,7 @@ public class UserService {
     private final MissionImageRepository missionImageRepository;
     private final DraftRepository draftRepository;
     private final JwtProvider jwtProvider;
+    private final S3Service s3Service;
 
     @Value("${app.version:0.0.1}")
     private String appVersion;
@@ -292,6 +296,63 @@ public class UserService {
                 .imageUrls(imageUrls)
                 .completedAt(userMission.getCompletedAt())
                 .isCompleted(userMission.isCompleted())
+                .build();
+    }
+
+    // 미션 수정
+    @Transactional
+    public UpdateMissionResponse updateMission(
+            Long userId,
+            Long userMissionId,
+            UpdateMissionRequest request,
+            List<MultipartFile> images
+    ) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus._MEMBER_NOT_FOUND));
+
+        UserMissions userMission = userMissionRepository.findByUserMissionIdAndUser(userMissionId, user)
+                .orElseThrow(() -> new GeneralException(ErrorStatus._USER_MISSION_NOT_FOUND));
+
+        // 내용 수정
+        if (request.getContents() != null && !request.getContents().trim().isEmpty()) {
+            Drafts draft = draftRepository.findTopByUserMissions(userMission)
+                    .orElseThrow(() -> new GeneralException(ErrorStatus._DRAFT_NOT_FOUND));
+            draft.updateContents(request.getContents());
+        }
+
+        // 이미지 수정 (이미지삭제하고 새이미지 넣기)
+        if (images != null && !images.isEmpty()) {
+            // 기존 이미지 삭제
+            List<MissionImages> existingImages = missionImageRepository.findByUserMissions(userMission);
+            missionImageRepository.deleteAll(existingImages);
+
+            // 새이미지 업로드,저장
+            for (MultipartFile image : images) {
+                if (!image.isEmpty()) {
+                    String imageUrl = s3Service.upload(image, "missions");
+                    MissionImages missionImage = MissionImages.builder()
+                            .userMissions(userMission)
+                            .imageUrl(imageUrl)
+                            .build();
+                    missionImageRepository.save(missionImage);
+                }
+            }
+        }
+
+        // 업데이트된 내용 조회
+        String updatedContents = draftRepository.findTopByUserMissions(userMission)
+                .map(Drafts::getContents)
+                .orElse(null);
+
+        List<String> updatedImageUrls = missionImageRepository.findByUserMissions(userMission)
+                .stream()
+                .map(MissionImages::getImageUrl)
+                .collect(Collectors.toList());
+
+        return UpdateMissionResponse.builder()
+                .userMissionId(userMission.getUserMissionId())
+                .draftContents(updatedContents)
+                .imageUrls(updatedImageUrls)
                 .build();
     }
 }
