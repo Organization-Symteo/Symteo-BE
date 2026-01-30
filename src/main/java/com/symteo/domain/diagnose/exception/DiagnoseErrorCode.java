@@ -10,7 +10,7 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum DiagnoseErrorCode implements BaseErrorCode {
 
-    _DIAGNOSE_NOT_FOUND(HttpStatus.NOT_FOUND, "CHATROOM404","채팅방이 존재하지 않습니다.");
+    _DIAGNOSE_NOT_FOUND(HttpStatus.NOT_FOUND, "DIAGNOSE404","해당 분야의 진단이 존재하지 않습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
