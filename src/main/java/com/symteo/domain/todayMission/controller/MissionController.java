@@ -2,6 +2,7 @@ package com.symteo.domain.todayMission.controller;
 
 import com.symteo.domain.todayMission.dto.*;
 import com.symteo.domain.todayMission.service.MissionService;
+import com.symteo.domain.user.repository.UserRepository;
 import com.symteo.global.ApiPayload.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -15,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class MissionController {
 
     private final MissionService missionService;
+    private final UserRepository userRepository;
 
     // 오늘의 미션 조회
     @GetMapping("/today")
@@ -65,4 +67,13 @@ public class MissionController {
         );
     }
 
+    // 오늘 미션 새로고침 API
+    @PatchMapping("/today-mission/restart")
+    public ApiResponse<MissionResponse> refreshTodayMission(
+            @AuthenticationPrincipal Long userId
+    ) {
+        return ApiResponse.onSuccess(
+                missionService.refreshTodayMission(userId)
+        );
+    }
 }
