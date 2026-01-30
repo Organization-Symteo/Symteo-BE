@@ -50,7 +50,8 @@ public class CounselCommandServiceImpl implements CounselCommandService{
                 .orElseThrow(() -> new CounselException(CounselErrorCode._CHATROOM_NOT_FOUND));
 
         // 1) 이전 상담 내역 호출
-        List<ChatMessage> readMessages = chatMessageRepository.getRecentMessages(userId, PageRequest.of(0, 10));
+        List<ChatMessage> readMessages = chatMessageRepository.getRecentMessages(userId, PageRequest.of(0, 10))
+                .orElseThrow(() -> new CounselException(CounselErrorCode._CHATMESSAGE_NOT_FOUND));
 
         // 2) 사용자 상담 설정 로딩
         CounselorSettings settings = counselorSettingRepository.findById(userId)
@@ -110,8 +111,10 @@ public class CounselCommandServiceImpl implements CounselCommandService{
 
         // 2) 채팅 내역 가져오기
         List<ChatMessage> chatMessages = chatRoom.getChatMessages();
-        List<ChatMessage> aiMessages = chatMessageRepository.findAllByChatRoom_ChatroomIdAndRole(dto.chatRoomId(), Role.AI);
-        List<ChatMessage> userMessages = chatMessageRepository.findAllByChatRoom_ChatroomIdAndRole(dto.chatRoomId(), Role.USER);
+        List<ChatMessage> aiMessages = chatMessageRepository.findAllByChatRoom_ChatroomIdAndRole(dto.chatRoomId(), Role.AI)
+                .orElseThrow(() -> new CounselException(CounselErrorCode._CHATMESSAGE_NOT_FOUND));
+        List<ChatMessage> userMessages = chatMessageRepository.findAllByChatRoom_ChatroomIdAndRole(dto.chatRoomId(), Role.USER)
+                .orElseThrow(() -> new CounselException(CounselErrorCode._CHATMESSAGE_NOT_FOUND));
 
         // 3) 프롬프트 설정
         String promptText = """
