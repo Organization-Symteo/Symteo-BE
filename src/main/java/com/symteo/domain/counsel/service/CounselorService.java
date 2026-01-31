@@ -37,6 +37,7 @@ public class CounselorService {
                 .supportStyle(request.getSupportStyle())
                 .roleCounselor(request.getRoleCounselor())
                 .answerFormat(request.getAnswerFormat())
+                .tone(request.getTone())
                 .build();
 
         // 4. DB에 저장

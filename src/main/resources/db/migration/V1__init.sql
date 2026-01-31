@@ -79,6 +79,7 @@ CREATE TABLE `ai_counselor_settings` (
                                          `support_style` VARCHAR(20) NOT NULL,
                                          `role_counselor` VARCHAR(20) NOT NULL,
                                          `answer_format` VARCHAR(20) NOT NULL,
+                                         `tone` VARCHAR(20) NOT NULL,
                                          PRIMARY KEY (`user_id`),
                                          CONSTRAINT `FK_Users_TO_AICounselor` FOREIGN KEY (`user_id`) REFERENCES `users` (`users_id`)
 );

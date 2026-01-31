@@ -8,12 +8,12 @@ CREATE TABLE `diagnoses` (
                               `deleted_at`   DATETIME NULL,
                               PRIMARY KEY (`id`),
                               CONSTRAINT `fk_diagnoses_user_id`
-                                  FOREIGN KEY (`user_id`) REFERENCES `Users` (`users_id`)
+                                  FOREIGN KEY (`user_id`) REFERENCES `users` (`users_id`)
 );
 
-DROP TABLE ADHD_test;
-DROP TABLE Anxiety_test;
-DROP TABLE Attach_test;
-DROP TABLE BurnOut_test;
-DROP TABLE Depression_test;
-DROP TABLE Stress_test;
+DROP TABLE adhd_test;
+DROP TABLE anxiety_test;
+DROP TABLE attach_test;
+DROP TABLE burnout_test;
+DROP TABLE depression_test;
+DROP TABLE stress_test;
