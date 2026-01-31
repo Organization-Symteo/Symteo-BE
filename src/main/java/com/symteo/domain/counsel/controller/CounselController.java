@@ -32,24 +32,26 @@ public class CounselController {
     // AI 상담 요청 보내기
     @PostMapping("/request")
     public ApiResponse<CounselResDTO.ChatMessage> askAI(
+            @AuthenticationPrincipal Long userId,
             @RequestBody CounselReqDTO.ChatMessage dto
     ){
-        return ApiResponse.onSuccess(counselCommandService.askCounsel(dto));
+        return ApiResponse.onSuccess(counselCommandService.askCounsel(userId, dto));
     }
 
     // AI 상담 종료하기
     @PatchMapping("/save")
     public ApiResponse<CounselResDTO.ChatSummary> summaryAI(
+            @AuthenticationPrincipal Long userId,
             @RequestBody CounselReqDTO.ChatSummary dto
     ){
-        return ApiResponse.onSuccess(counselCommandService.summaryCounsel(dto));
+        return ApiResponse.onSuccess(counselCommandService.summaryCounsel(userId, dto));
     }
 
     // 전체 상담 조회하기
     // 나중에 Spring JWT에서 토큰 속 id를 찾자
     @GetMapping("/all")
-    public ApiResponse<List<CounselResDTO.Chat>> getALlChat(
-            @RequestParam Long userId
+    public ApiResponse<List<CounselResDTO.Chat>> getAllChat(
+            @AuthenticationPrincipal Long userId
     ){
         return ApiResponse.onSuccess(counselQueryService.readAllChat(userId));
     }
@@ -57,17 +59,19 @@ public class CounselController {
     // 단일 상담 조회하기
     @GetMapping("/{counselId}")
     public ApiResponse<CounselResDTO.ChatSummary> getChat(
+            @AuthenticationPrincipal Long userId,
             @PathVariable Long counselId
     ){
-        return ApiResponse.onSuccess(counselQueryService.readChat(counselId));
+        return ApiResponse.onSuccess(counselQueryService.readChat(userId, counselId));
     }
 
     // 상담 삭제하기
     @DeleteMapping("/{counselId}")
     public ApiResponse<Long> deleteChat(
+            @AuthenticationPrincipal Long userId,
             @PathVariable Long counselId
     ){
-        return ApiResponse.onSuccess(counselCommandService.deleteChat(counselId));
+        return ApiResponse.onSuccess(counselCommandService.deleteChat(userId, counselId));
     }
 
     // 상담사 초기 설정 저장
