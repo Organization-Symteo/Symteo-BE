@@ -18,7 +18,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -39,9 +38,8 @@ public class CounselCommandServiceImpl implements CounselCommandService{
     /// --- 1. 상담 요청 메소드
     @Override
     @Transactional
-    public CounselResDTO.ChatMessage askCounsel(CounselReqDTO.ChatMessage dto) {
+    public CounselResDTO.ChatMessage askCounsel(Long userId, CounselReqDTO.ChatMessage dto) {
 
-        Long userId = dto.userId(); // JWT 변경 해야됨
         String question = dto.text();
 
         ChatRoom chatRoom = (dto.chatRoomId() == null)
@@ -104,7 +102,7 @@ public class CounselCommandServiceImpl implements CounselCommandService{
     // 전체 채팅, AI 채팅, 유저 채팅을 각각 요약한다.
     @Transactional
     @Override
-    public CounselResDTO.ChatSummary summaryCounsel(CounselReqDTO.ChatSummary dto) {
+    public CounselResDTO.ChatSummary summaryCounsel(Long userId, CounselReqDTO.ChatSummary dto) {
         // 1) 채팅방 찾기
         ChatRoom chatRoom = chatRoomRepository.findById(dto.chatRoomId())
                 .orElseThrow(() -> new CounselException(CounselErrorCode._CHATROOM_NOT_FOUND));
@@ -163,9 +161,13 @@ public class CounselCommandServiceImpl implements CounselCommandService{
 
     /// 3. 상담 삭제 메소드
     @Override
-    public Long deleteChat(Long courseId) {
+    public Long deleteChat(Long userId, Long courseId) {
         ChatRoom chatRoom = chatRoomRepository.findById(courseId)
                 .orElseThrow(() -> new CounselException(CounselErrorCode._CHATROOM_NOT_FOUND));
+
+        if(!Objects.equals(chatRoom.getUserId(), userId)){ // null 안전 eqauls
+            throw new CounselException(CounselErrorCode._CHATROOM_ACCESS_DENIED);
+        }
 
         chatRoomRepository.delete(chatRoom);
         return courseId;

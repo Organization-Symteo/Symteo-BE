@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -37,21 +38,15 @@ public class CounselQueryServiceImpl implements CounselQueryService{
 
     // 데이터베이스 단일 상담 조회
     @Override
-    public CounselResDTO.ChatSummary readChat(Long chatRoomId) {
+    public CounselResDTO.ChatSummary readChat(Long userId, Long chatRoomId) {
 
         ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
                 .orElseThrow(() -> new CounselException(CounselErrorCode._CHATROOM_NOT_FOUND));
+
+        if(!Objects.equals(chatRoom.getUserId(), userId)){ // null 안전 eqauls
+            throw new CounselException(CounselErrorCode._CHATROOM_ACCESS_DENIED);
+        }
 
         return CounselConverter.EntityToChatDetails(chatRoom);
-    }
-
-    // 상담 삭제
-    @Override
-    public Long deleteChat(Long chatRoomId) {
-        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
-                .orElseThrow(() -> new CounselException(CounselErrorCode._CHATROOM_NOT_FOUND));
-
-        chatRoomRepository.delete(chatRoom);
-        return chatRoomId;
     }
 }

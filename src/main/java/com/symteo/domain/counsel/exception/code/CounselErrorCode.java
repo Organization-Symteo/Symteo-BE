@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 @AllArgsConstructor
 public enum CounselErrorCode implements BaseErrorCode {
 
+    _CHATROOM_ACCESS_DENIED(HttpStatus.FORBIDDEN, "CHATROOM403", "해당 채팅방에 권한이 없습니다."),
     _CHATROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "CHATROOM404","채팅방이 존재하지 않습니다."),
     _CHATMESSAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "CHATMESSAGE404","채팅이 존재하지 않습니다."),
     _AI_SERVER_ERROR(HttpStatus.REQUEST_TIMEOUT, "COUNSEL408", "AI 서버와의 연결이 원활하지 않습니다."),
