@@ -2,6 +2,7 @@ package com.symteo.domain.report.service;
 
 import com.symteo.domain.diagnose.dto.req.DiagnoseReqDTO;
 import com.symteo.domain.diagnose.entity.Diagnose;
+import com.symteo.domain.diagnose.enums.DiagnoseType;
 import com.symteo.domain.report.dto.ReportsResponse;
 import com.symteo.domain.report.entity.DiagnoseAiReports;
 import com.symteo.domain.report.entity.Reports;
@@ -51,7 +52,7 @@ public class StressReportsService {
         Reports report = Reports.builder()
                 .user(user)
                 .diagnoseId(diagnose.getId())
-                .rType("STRESS_BURNOUT_COMPLEX")
+                .rType(DiagnoseType.STRESS_BURNOUT_COMPLEX)
                 .build();
         reportsRepository.save(report);
 
@@ -185,7 +186,7 @@ public class StressReportsService {
 
         // 지난 달 리포트 조회 및 비교
         reportsRepository.findLastReport(
-                st.getUser(), "STRESS_BURNOUT_COMPLEX", st.getReport().getCreatedAt()
+                st.getUser(), DiagnoseType.STRESS_BURNOUT_COMPLEX, st.getReport().getCreatedAt()
         ).ifPresent(prevReport -> {
             stressReportsRepository.findByReport(prevReport).ifPresent(prevSt -> {
                 // 현재 통제감이 지난 리포트의 통제감보다 낮은 경우

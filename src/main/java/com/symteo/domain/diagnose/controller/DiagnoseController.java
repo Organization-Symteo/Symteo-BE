@@ -6,6 +6,7 @@ import com.symteo.domain.diagnose.service.DiagnoseCommandService;
 import com.symteo.domain.diagnose.service.DiagnoseQueryService;
 import com.symteo.global.ApiPayload.ApiResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,15 +22,16 @@ public class DiagnoseController {
     // 검사 생성하기
     @PostMapping("")
     public ApiResponse<DiagnoseResDTO.CreateDTO> askDiagnose(
+            @AuthenticationPrincipal Long userId,
             @RequestBody DiagnoseReqDTO.DiagnoseDTO answers
     ){
-        return ApiResponse.onSuccess(diagnoseCommandService.createDiagnose(answers));
+        return ApiResponse.onSuccess(diagnoseCommandService.createDiagnose(userId, answers));
     }
 
     // 전체 검사 조회하기
     @GetMapping("")
     public ApiResponse<List<DiagnoseResDTO.ResultDTO>> getAllDiagnose(
-            @RequestParam Long userId
+            @AuthenticationPrincipal Long userId
     ){
         return ApiResponse.onSuccess(diagnoseQueryService.getAllDiagnose(userId));
     }
@@ -56,16 +58,18 @@ public class DiagnoseController {
     // 단일 검사 조회하기
     @GetMapping("/{diagnoseId}")
     public ApiResponse<DiagnoseResDTO.ResultDTO> getDiagnose(
+            @AuthenticationPrincipal Long userId,
             @PathVariable Long diagnoseId
     ){
-        return ApiResponse.onSuccess(diagnoseQueryService.getDiagnose(diagnoseId));
+        return ApiResponse.onSuccess(diagnoseQueryService.getDiagnose(userId, diagnoseId));
     }
 
     // 검사 삭제하기
     @DeleteMapping("/{diagnoseId}")
     public ApiResponse<DiagnoseResDTO.DeleteDTO> deleteDiagnose(
+            @AuthenticationPrincipal Long userId,
             @PathVariable Long diagnoseId
     ){
-        return ApiResponse.onSuccess(diagnoseCommandService.deleteDiagnose(diagnoseId));
+        return ApiResponse.onSuccess(diagnoseCommandService.deleteDiagnose(userId, diagnoseId));
     }
 }
