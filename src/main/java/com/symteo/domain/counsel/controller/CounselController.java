@@ -21,7 +21,7 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/counsel")
+@RequestMapping("/api/v1/counsels")
 @RequiredArgsConstructor
 public class CounselController {
 
@@ -30,7 +30,7 @@ public class CounselController {
     private final CounselorService counselorService;
 
     // AI 상담 요청 보내기
-    @PostMapping("/request")
+    @PostMapping("")
     public ApiResponse<CounselResDTO.ChatMessage> askAI(
             @AuthenticationPrincipal Long userId,
             @RequestBody CounselReqDTO.ChatMessage dto
@@ -39,7 +39,7 @@ public class CounselController {
     }
 
     // AI 상담 종료하기
-    @PatchMapping("/save")
+    @PatchMapping("")
     public ApiResponse<CounselResDTO.ChatSummary> summaryAI(
             @AuthenticationPrincipal Long userId,
             @RequestBody CounselReqDTO.ChatSummary dto
@@ -49,7 +49,7 @@ public class CounselController {
 
     // 전체 상담 조회하기
     // 나중에 Spring JWT에서 토큰 속 id를 찾자
-    @GetMapping("/all")
+    @GetMapping("")
     public ApiResponse<List<CounselResDTO.Chat>> getAllChat(
             @AuthenticationPrincipal Long userId
     ){
@@ -75,7 +75,7 @@ public class CounselController {
     }
 
     // 상담사 초기 설정 저장
-    @PostMapping("/settings")
+    @PutMapping("/setting")
     public ResponseEntity<String> saveSettings(@RequestBody CounselorSettingReqDTO request) {
 
         counselorService.saveSettings(request);

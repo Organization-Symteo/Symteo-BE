@@ -12,14 +12,14 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/diagnose")
+@RequestMapping("/api/v1/diagnoses")
 public class DiagnoseController {
 
     private final DiagnoseCommandService diagnoseCommandService;
     private final DiagnoseQueryService diagnoseQueryService;
 
     // 검사 생성하기
-    @PostMapping("/upload")
+    @PostMapping("")
     public ApiResponse<DiagnoseResDTO.CreateDTO> askDiagnose(
             @RequestBody DiagnoseReqDTO.DiagnoseDTO answers
     ){
@@ -27,7 +27,7 @@ public class DiagnoseController {
     }
 
     // 전체 검사 조회하기
-    @GetMapping("/all")
+    @GetMapping("")
     public ApiResponse<List<DiagnoseResDTO.ResultDTO>> getAllDiagnose(
             @RequestParam Long userId
     ){
@@ -54,18 +54,18 @@ public class DiagnoseController {
      * */
 
     // 단일 검사 조회하기
-    @GetMapping("/{testId}")
+    @GetMapping("/{diagnoseId}")
     public ApiResponse<DiagnoseResDTO.ResultDTO> getDiagnose(
-            @PathVariable Long testId
+            @PathVariable Long diagnoseId
     ){
-        return ApiResponse.onSuccess(diagnoseQueryService.getDiagnose(testId));
+        return ApiResponse.onSuccess(diagnoseQueryService.getDiagnose(diagnoseId));
     }
 
     // 검사 삭제하기
-    @DeleteMapping("/{testId}")
+    @DeleteMapping("/{diagnoseId}")
     public ApiResponse<DiagnoseResDTO.DeleteDTO> deleteDiagnose(
-            @PathVariable Long testId
+            @PathVariable Long diagnoseId
     ){
-        return ApiResponse.onSuccess(diagnoseCommandService.deleteDiagnose(testId));
+        return ApiResponse.onSuccess(diagnoseCommandService.deleteDiagnose(diagnoseId));
     }
 }
