@@ -2,6 +2,7 @@ package com.symteo.domain.home.service;
 
 import com.symteo.domain.home.entity.TodayLines;
 import com.symteo.domain.home.repository.TodayLineRepository;
+import com.symteo.domain.user.repository.UserRepository;
 import com.symteo.global.ApiPayload.exception.GeneralException;
 import com.symteo.global.ApiPayload.status.ErrorStatus;
 import lombok.RequiredArgsConstructor;
@@ -17,9 +18,14 @@ import java.time.LocalDate;
 public class TodayLineService {
 
     private final TodayLineRepository todayLineRepository;
+    private final UserRepository userRepository;
 
+    // 오늘의 한 줄 조회 api
     @Transactional(readOnly = true)
-    public String getTodayLine() {
+    public String getTodayLine(Long userId) {
+        userRepository.findById(userId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus._MEMBER_NOT_FOUND));
+
         // 전체 문구 개수 확인
         long totalCount = todayLineRepository.count();
         if (totalCount == 0) throw new GeneralException(ErrorStatus._TODAY_LINE_NOT_FOUND);
