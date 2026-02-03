@@ -51,7 +51,10 @@ public enum ErrorStatus implements BaseErrorCode {
 
     // 진단 오류
     _DIAGNOSE_NOT_FOUND(HttpStatus.NOT_FOUND, "DIAGNOSE404", "검사 결과가 없습니다."),
-    _REPORT_NOT_FOUND(HttpStatus.NOT_FOUND, "REPORTS404", "리포트가 존재하지 않습니다.");
+    _REPORT_NOT_FOUND(HttpStatus.NOT_FOUND, "REPORTS404", "리포트가 존재하지 않습니다."),
+
+    // 오늘의 한 줄 오류
+    _TODAY_LINE_NOT_FOUND(HttpStatus.NOT_FOUND, "TODAYLINE404", "오늘의 한 줄이 존재하지 않습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
