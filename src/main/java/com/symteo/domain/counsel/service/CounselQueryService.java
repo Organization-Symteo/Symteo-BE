@@ -9,6 +9,5 @@ import java.util.List;
 
 public interface CounselQueryService {
     public List<CounselResDTO.Chat> readAllChat(Long userId);
-    public CounselResDTO.ChatSummary readChat(Long chatRoomId);
-    public Long deleteChat(Long chatRoomId);
+    public CounselResDTO.ChatSummary readChat(Long userId, Long chatRoomId);
 }
