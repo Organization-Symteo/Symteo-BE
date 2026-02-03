@@ -38,7 +38,7 @@ public class UserMissions {
     private boolean isDrafted = false;
 
     @Column(name = "is_restarted", nullable = false)
-    private boolean isRestarted = false; // 템플릿에서 이쪽으로 이동
+    private boolean isRestarted = false;
 
     @Builder
     public UserMissions(User user, Missions missions) {
