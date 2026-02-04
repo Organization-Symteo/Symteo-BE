@@ -179,7 +179,7 @@ public class MissionDataInitializer {
                     .category(category)
                     .subCategory(sub)
                     .missionContents(content)
-                    .deadLine(LocalDateTime.of(9999, 12, 31, 23, 59)) // 템플릿용 미래 기한
+                    .deadLine(LocalDateTime.of(9999, 12, 31, 14, 00)) // 템플릿용 미래 기한
                     .build());
         }
     }
