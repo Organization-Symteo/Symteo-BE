@@ -2,7 +2,7 @@ name: Symteo Backend CI/CD
 
 on:
   push:
-    branches: [ "develop" ] # PR 후 develop에 합쳐졌을 때 dev CI/CD 시작
+    branches: [ "main" ] # PR 후 main에 합쳐졌을 때 dev CI/CD 시작
 
 jobs:
   build:
@@ -37,7 +37,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/symteo-server:dev
+          tags: ${{ secrets.DOCKER_USERNAME }}/symteo-server:prod
 
   deploy:
     needs: build
@@ -52,6 +52,6 @@ jobs:
           script: |
             cd ~/symteo
             sudo docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/symteo-server:dev
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/symteo-server:prod
 
-            sudo docker compose up -d --force-recreate symteo-dev
+            sudo docker compose up -d --force-recreate symteo-prod
