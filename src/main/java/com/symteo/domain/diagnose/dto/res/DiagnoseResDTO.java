@@ -1,6 +1,7 @@
 package com.symteo.domain.diagnose.dto.res;
 
 import com.symteo.domain.diagnose.dto.req.DiagnoseReqDTO;
+import com.symteo.domain.diagnose.enums.DiagnoseType;
 import lombok.Builder;
 
 import java.util.List;
@@ -15,7 +16,7 @@ public class DiagnoseResDTO {
     @Builder
     public record ResultDTO(
             Long userId,
-            String testType,
+            DiagnoseType testType,
             List<DiagnoseReqDTO.AnswerDTO> answers
     ){}
 
