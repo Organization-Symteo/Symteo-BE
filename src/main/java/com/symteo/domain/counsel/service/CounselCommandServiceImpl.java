@@ -15,6 +15,13 @@ import com.symteo.domain.counsel.exception.code.CounselException;
 import com.symteo.domain.counsel.repository.ChatMessageRepository;
 import com.symteo.domain.counsel.repository.ChatRoomRepository;
 import com.symteo.domain.counsel.repository.CounselorSettingRepository;
+import com.symteo.domain.report.dto.ReportsResponse;
+import com.symteo.domain.report.service.AttachmentReportsService;
+import com.symteo.domain.report.service.DepressionAnxietyReportsService;
+import com.symteo.domain.report.service.StressReportsService;
+import com.symteo.domain.user.repository.UserRepository;
+import com.symteo.global.ApiPayload.exception.GeneralException;
+import com.symteo.global.ApiPayload.status.ErrorStatus;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +32,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -39,12 +47,10 @@ public class CounselCommandServiceImpl implements CounselCommandService{
     private final ChatRoomRepository chatRoomRepository;
     private final ChatMessageRepository chatMessageRepository;
     private final CounselorSettingRepository counselorSettingRepository;
+    private final PromptFactory promptFactory;
 
     @Value("classpath:prompts/askCounselPrompt.st")
     private Resource askCounselPrompt;
-
-    @Value("classpath:prompts/summaryCounselPrompt.st")
-    private Resource summaryCounselPrompt;
 
     /// --- 1. 상담 요청 메소드
     @Override
@@ -102,7 +108,50 @@ public class CounselCommandServiceImpl implements CounselCommandService{
         return CounselConverter.EntityToChatSet(chatRoom, question, answer.content());
     }
 
-    /// --- 2. 상담 종료 및 요약 메소드
+    /// --- 2. 리포트 분석 요청 메소드
+    @Override
+    public CounselResDTO.ChatMessage askReport(Long userId, CounselReqDTO.ChatReport dto) {
+
+        ChatRoom chatRoom = (dto.chatRoomId() == null)
+                ? chatRoomRepository.save(CounselConverter.toChatRoom(userId))
+                : chatRoomRepository.findById(dto.chatRoomId())
+                .orElseThrow(() -> new CounselException(CounselErrorCode._CHATROOM_NOT_FOUND));
+
+        // 1) 진단 타입 확인, 리포트 가져오기
+        String systemText = switch (dto.reportType()) {
+            case ATTACHMENT_TEST -> promptFactory.createAPrompt(userId, dto.reportId());
+            case STRESS_BURNOUT_COMPLEX -> promptFactory.createSBPrompt(userId, dto.reportId());
+            case DEPRESSION_ANXIETY_COMPLEX -> promptFactory.createDAPrompt(userId, dto.reportId());
+        };
+
+        // 2) 이전 상담 내역 호출
+        List<ChatMessage> readMessages = chatMessageRepository.getRecentMessages(userId, PageRequest.of(0, 10))
+                .orElseThrow(() -> new CounselException(CounselErrorCode._CHATMESSAGE_NOT_FOUND));
+
+        // 3) AI 리포트 분석
+        String question = dto.reportType() + " 리포트 분석 결과에 대해서 알려줘.";
+        AiAnswerDTO.AnswerDTO answer;
+        try {
+            answer = chatClient.prompt()
+                    .system(systemText)
+                    .messages(CounselMessageConverter.toAiMessages(readMessages))
+                    .user(question)
+                    .call()
+                    .entity(AiAnswerDTO.AnswerDTO.class);
+        } catch (Exception e) {
+            log.error("AI 리포트 분석 중 오류 발생: ", e);
+            throw new CounselException(CounselErrorCode._AI_SERVER_ERROR);
+        }
+
+        // 3) 결과 반환
+        ChatMessage ReportMessage = CounselConverter.toChatMessage(Objects.requireNonNull(answer).content(), chatRoom);
+        ReportMessage.setRole(Role.REPORT);
+        chatMessageRepository.save(ReportMessage);
+
+        return CounselConverter.EntityToChatSet(chatRoom, question, answer.content());
+    }
+
+    /// --- 3. 상담 종료 및 요약 메소드
     // 전체 채팅, AI 채팅, 유저 채팅을 각각 요약한다.
     @Transactional
     @Override

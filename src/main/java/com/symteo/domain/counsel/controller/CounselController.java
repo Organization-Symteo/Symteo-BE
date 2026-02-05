@@ -7,6 +7,11 @@ import com.symteo.domain.counsel.service.CounselCommandService;
 import com.symteo.domain.counsel.service.CounselQueryService;
 import com.symteo.domain.counsel.service.CounselorService;
 
+import com.symteo.domain.diagnose.enums.DiagnoseType;
+import com.symteo.domain.diagnose.repository.DiagnoseRepository;
+import com.symteo.domain.report.service.AttachmentReportsService;
+import com.symteo.domain.report.service.DepressionAnxietyReportsService;
+import com.symteo.domain.report.service.StressReportsService;
 import com.symteo.global.ApiPayload.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +41,15 @@ public class CounselController {
             @RequestBody CounselReqDTO.ChatMessage dto
     ){
         return ApiResponse.onSuccess(counselCommandService.askCounsel(userId, dto));
+    }
+
+    // 리포트 불러오기
+    @PostMapping("/report")
+    public ApiResponse<CounselResDTO.ChatMessage> askAiReport(
+            @AuthenticationPrincipal Long userId,
+            @RequestBody CounselReqDTO.ChatReport dto
+    ){
+        return ApiResponse.onSuccess(counselCommandService.askReport(userId, dto));
     }
 
     // AI 상담 종료하기

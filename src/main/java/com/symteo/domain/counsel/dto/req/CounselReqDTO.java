@@ -1,5 +1,7 @@
 package com.symteo.domain.counsel.dto.req;
 
+import com.symteo.domain.diagnose.enums.DiagnoseType;
+
 public class CounselReqDTO {
 
     // 사용자가 보낸 AI 상담 정보
@@ -13,5 +15,12 @@ public class CounselReqDTO {
     // '종료하기' 누를 때 AI에게 ChatRoom의 전체 채팅 내역을 보낼 때 사용
     public record ChatSummary(
             Long chatRoomId
+    ){}
+
+    // 상담 중 리포트 불러오기
+    public record ChatReport(
+            Long chatRoomId,
+            DiagnoseType reportType,
+            Long reportId
     ){}
 }
