@@ -40,6 +40,12 @@ public class SecurityConfig {
                                 "/api/v1/auth/**", "/error", "/favicon.ico", "/actuator/health", "/actuator/prometheus"
                         ).permitAll()
 
+                        .requestMatchers(
+                                //카카오, 구글, 네이버 OAuth2 리다이렉트(콜백) 주소 허용
+                                "/oauth/**",
+                                "/login/oauth2/**"
+                        ).permitAll()
+
                         // DevAuthController 관련 내용이므로 이후 삭제 에정(개발용 로그인 경로는 프리패스 허용)
                         .requestMatchers("/api/v1/dev/**").permitAll()
 
