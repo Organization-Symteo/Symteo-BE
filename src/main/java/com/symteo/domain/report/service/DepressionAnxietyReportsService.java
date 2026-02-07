@@ -2,6 +2,7 @@ package com.symteo.domain.report.service;
 
 import com.symteo.domain.diagnose.dto.req.DiagnoseReqDTO;
 import com.symteo.domain.diagnose.entity.Diagnose;
+import com.symteo.domain.diagnose.enums.DiagnoseType;
 import com.symteo.domain.diagnose.repository.DiagnoseRepository;
 import com.symteo.domain.report.dto.ReportsResponse;
 import com.symteo.domain.report.entity.DiagnoseAiReports;
@@ -40,7 +41,7 @@ public class DepressionAnxietyReportsService {
 
         // 중복 체크 (diagnoseId 및 rType 기준)
         Optional<Reports> existingReport = reportsRepository.findByDuplicateCheck(
-                user, "DEPRESSION_ANXIETY_COMPLEX", diagnose.getId());
+                user, DiagnoseType.DEPRESSION_ANXIETY_COMPLEX, diagnose.getId());
 
         if (existingReport.isPresent()) {
             return ReportsResponse.CreateReportResult.builder()
@@ -53,7 +54,7 @@ public class DepressionAnxietyReportsService {
         // 리포트 마스터 생성
         Reports report = reportsRepository.save(Reports.builder()
                 .user(user).diagnoseId(diagnose.getId())
-                .rType("DEPRESSION_ANXIETY_COMPLEX").build());
+                .rType(DiagnoseType.DEPRESSION_ANXIETY_COMPLEX).build());
 
         // 점수 계산 및 개별 도메인 저장
         List<DiagnoseReqDTO.AnswerDTO> answers = diagnose.getAnswers();

@@ -1,6 +1,7 @@
 package com.symteo.domain.report.service;
 
 import com.symteo.domain.diagnose.entity.Diagnose;
+import com.symteo.domain.diagnose.enums.DiagnoseType;
 import com.symteo.domain.report.dto.ReportsResponse;
 import com.symteo.domain.report.entity.Reports;
 import com.symteo.domain.report.entity.mapping.AttachmentReports;
@@ -57,7 +58,7 @@ public class AttachmentReportsService {
 
         // 4. 리포트 마스터 및 상세 저장
         Reports report = reportsRepository.save(Reports.builder()
-                .user(user).diagnoseId(diagnose.getId()).rType("ATTACHMENT_TEST").build());
+                .user(user).diagnoseId(diagnose.getId()).rType(DiagnoseType.ATTACHMENT_TEST).build());
 
         attachmentReportsRepository.save(AttachmentReports.builder()
                 .user(user).report(report)
@@ -69,7 +70,7 @@ public class AttachmentReportsService {
 
         report.complete();
         return ReportsResponse.CreateReportResult.builder()
-                .reportId(report.getReportId()).testType("ATTACHMENT_TEST")
+                .reportId(report.getReportId()).testType(DiagnoseType.ATTACHMENT_TEST)
                 .createdAt(report.getCreatedAt()).build();
     }
 
