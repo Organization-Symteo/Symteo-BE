@@ -51,55 +51,51 @@ public class AuthService {
 
     @Transactional
     public AuthResponse login(String provider, String authCode) {
-        // 1. 인가 코드를 이용해 소셜 액세스 토큰 발급받기
+        // 1. 인가 코드로 소셜 토큰 받아오기
         String socialAccessToken = getSocialAccessToken(provider, authCode);
 
-        // 2. DB에서 사용자 정보(식별자) 가져오기
+        // 2. 소셜 토큰으로 유저 정보 가져오기
         SocialUserInfo socialUser = socialLoadStrategy.getSocialInfo(provider, socialAccessToken);
 
-        // 3. DB에서 유저 조회
-        // 회원 탈퇴한 유저도 조회 가능
+        // 3. 로그인/회원가입 처리
+        return processLogin(socialUser);
+    }
+
+    private AuthResponse processLogin(SocialUserInfo socialUser) {
         User user = userRepository.findBySocialTypeAndSocialId(socialUser.getSocialType(), socialUser.getSocialId())
                 .orElse(null);
 
-        // 3. 회원가입 or 로그인
-        // CASE 1: 아예 없는 유저라면 -> 회원가입 진행
+        // 신규 가입
         if (user == null) {
             user = registerUser(socialUser);
         }
-
-        // CASE 2: 탈퇴 이력이 있는 유저 (Soft Delete 상태)
+        // 탈퇴한 유저 재가입 체크
         else if (user.getDeletedAt() != null) {
             LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
-
-            // A. 탈퇴한 지 7일이 아직 안 지남 -> 재가입 불가 (에러)
             if (user.getDeletedAt().isAfter(sevenDaysAgo)) {
                 throw new GeneralException(ErrorStatus._WITHDRAWAL_RESTRICTION);
             }
-
-            // B. 탈퇴한 지 7일이 지남 -> 완전 삭제 후 신규 가입 처리
             userRepository.delete(user);
             userRepository.flush();
             user = registerUser(socialUser);
         }
 
-        // 4. 앱 전용 토큰(JWT) 발급
+        // 앱 토큰(JWT) 발급
         String appAccessToken = jwtProvider.createAccessToken(user.getId(), user.getRole());
         String appRefreshToken = jwtProvider.createRefreshToken(user.getId());
 
-        // 5. Refresh Token 저장
         saveRefreshToken(user, appRefreshToken);
 
-        // 6. 응답 생성
         return AuthResponse.builder()
                 .accessToken(appAccessToken)
                 .refreshToken(appRefreshToken)
-                .isRegistered(user.getRole() == Role.USER) // USER면 가입완료, GUEST면 미완료
+                .isRegistered(user.getRole() == Role.USER)
                 .userId(user.getId())
                 .nickname(user.getNickname())
                 .build();
     }
 
+    // 소셜 서버에 요청해서 인가 코드를 토큰으로 교환
     private String getSocialAccessToken(String provider, String code) {
         String tokenUri;
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
@@ -132,7 +128,6 @@ public class AuthService {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
 
         try {
@@ -140,6 +135,7 @@ public class AuthService {
             JsonNode root = objectMapper.readTree(response.getBody());
             return root.path("access_token").asText();
         } catch (Exception e) {
+            log.error("소셜 로그인 토큰 발급 실패: {}", e.getMessage());
             throw new GeneralException(ErrorStatus._SOCIAL_LOGIN_FAILED);
         }
     }
