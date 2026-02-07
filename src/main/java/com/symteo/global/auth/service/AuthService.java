@@ -1,5 +1,7 @@
 package com.symteo.global.auth.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.symteo.global.auth.dto.AuthResponse;
 import com.symteo.global.auth.repository.UserTokenRepository;
 import com.symteo.domain.user.entity.User;
@@ -10,12 +12,20 @@ import com.symteo.global.ApiPayload.status.ErrorStatus;
 import com.symteo.global.jwt.JwtProvider;
 import com.symteo.global.oauth.info.SocialUserInfo;
 import com.symteo.global.oauth.service.SocialLoadStrategy;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import com.symteo.domain.user.enums.Role;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 
 
 @Slf4j
@@ -26,13 +36,28 @@ public class AuthService {
     private final UserRepository userRepository;
     private final UserTokenRepository userTokenRepository;
     private final JwtProvider jwtProvider;
+    private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
+
+    @Value("${spring.oauth.google.client-id}") private String googleClientId;
+    @Value("${spring.oauth.google.client-secret}") private String googleClientSecret;
+    @Value("${spring.oauth.google.redirect-uri}") private String googleRedirectUri;
+    @Value("${spring.oauth.kakao.client-id}") private String kakaoClientId;
+    @Value("${spring.oauth.kakao.redirect-uri}") private String kakaoRedirectUri;
+    @Value("${spring.oauth.kakao.client-secret}") private String kakaoClientSecret;
+    @Value("${spring.oauth.naver.client-id}") private String naverClientId;
+    @Value("${spring.oauth.naver.client-secret}") private String naverClientSecret;
+    @Value("${spring.oauth.naver.redirect-uri}") private String naverRedirectUri;
 
     @Transactional
-    public AuthResponse login(String provider, String accessToken) {
-        // 1. DB에서 사용자 정보(식별자) 가져오기
-        SocialUserInfo socialUser = socialLoadStrategy.getSocialInfo(provider, accessToken);
+    public AuthResponse login(String provider, String authCode) {
+        // 1. 인가 코드를 이용해 소셜 액세스 토큰 발급받기
+        String socialAccessToken = getSocialAccessToken(provider, authCode);
 
-        // 2. DB에서 유저 조회
+        // 2. DB에서 사용자 정보(식별자) 가져오기
+        SocialUserInfo socialUser = socialLoadStrategy.getSocialInfo(provider, socialAccessToken);
+
+        // 3. DB에서 유저 조회
         // 회원 탈퇴한 유저도 조회 가능
         User user = userRepository.findBySocialTypeAndSocialId(socialUser.getSocialType(), socialUser.getSocialId())
                 .orElse(null);
@@ -73,6 +98,50 @@ public class AuthService {
                 .userId(user.getId())
                 .nickname(user.getNickname())
                 .build();
+    }
+
+    private String getSocialAccessToken(String provider, String code) {
+        String tokenUri;
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("code", code);
+        params.add("grant_type", "authorization_code");
+
+        switch (provider.toLowerCase()) {
+            case "kakao":
+                tokenUri = "https://kauth.kakao.com/oauth/token";
+                params.add("client_id", kakaoClientId);
+                params.add("client_secret", kakaoClientSecret);
+                params.add("redirect_uri", kakaoRedirectUri);
+                break;
+            case "naver":
+                tokenUri = "https://nid.naver.com/oauth2.0/token";
+                params.add("client_id", naverClientId);
+                params.add("client_secret", naverClientSecret);
+                params.add("redirect_uri", naverRedirectUri);
+                params.add("state", "test_state");
+                break;
+            case "google":
+                tokenUri = "https://oauth2.googleapis.com/token";
+                params.add("client_id", googleClientId);
+                params.add("client_secret", googleClientSecret);
+                params.add("redirect_uri", googleRedirectUri);
+                break;
+            default:
+                throw new GeneralException(ErrorStatus._INVALID_PROVIDER);
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
+
+        try {
+            ResponseEntity<String> response = restTemplate.postForEntity(tokenUri, request, String.class);
+            JsonNode root = objectMapper.readTree(response.getBody());
+            return root.path("access_token").asText();
+        } catch (Exception e) {
+            throw new GeneralException(ErrorStatus._SOCIAL_LOGIN_FAILED);
+        }
     }
 
     // 신규 유저 저장 (GUEST 권한)
