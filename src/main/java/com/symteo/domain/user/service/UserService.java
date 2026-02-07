@@ -320,13 +320,11 @@ public class UserService {
             draft.updateContents(request.getContents());
         }
 
-        // 이미지 수정 (이미지삭제하고 새이미지 넣기)
+        // 2. 이미지 수정
         if (images != null && !images.isEmpty()) {
-            // 기존 이미지 삭제
             List<MissionImages> existingImages = missionImageRepository.findByUserMissions(userMission);
             missionImageRepository.deleteAll(existingImages);
 
-            // 새이미지 업로드,저장
             for (MultipartFile image : images) {
                 if (!image.isEmpty()) {
                     String imageUrl = s3Service.upload(image, "missions");
