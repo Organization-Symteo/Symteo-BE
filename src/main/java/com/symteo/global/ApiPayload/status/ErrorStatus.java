@@ -17,9 +17,6 @@ public enum ErrorStatus implements BaseErrorCode {
     _FORBIDDEN(HttpStatus.FORBIDDEN, "COMMON403", "금지된 요청입니다."),
     _INVALID_REQUEST(HttpStatus.BAD_REQUEST, "COMMON400", "잘못된 요청입니다."),
 
-    // For test
-    TEMP_EXCEPTION(HttpStatus.BAD_REQUEST, "TEMP4001", "이거는 테스트"),
-
     // Mission 오류
     _MISSION_NOT_FOUND(HttpStatus.NOT_FOUND, "MISSION404","오늘의 미션이 없습니다."),
     _MISSION_EXPIRED(HttpStatus.GONE, "MISSION410", "미션 기한이 만료되었습니다."),
@@ -31,24 +28,24 @@ public enum ErrorStatus implements BaseErrorCode {
     _NO_MORE_MISSIONS(HttpStatus.BAD_REQUEST, "MISSION400", "더 이상 미션이 없습니다."),
     _MISSION_ALREADY_COMPLETED(HttpStatus.CONFLICT, "MISSION409", "이미 완료한 미션입니다."),
 
-    // Member 없음 오류
-    _MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER404", "사용자가 없습니다."),
-
     //소셜 로그인 오류
-    _SOCIAL_LOGIN_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "AUTH_500", "소셜 로그인 서버와의 통신에 실패했습니다."),
-    _INVALID_PROVIDER(HttpStatus.BAD_REQUEST, "AUTH_400", "지원하지 않는 소셜 로그인 제공자입니다."),
+    _INVALID_PROVIDER(HttpStatus.BAD_REQUEST, "AUTH400", "지원하지 않는 소셜 로그인 제공자입니다."),
+    _INVALID_REFRESH_TOKEN(HttpStatus.NOT_FOUND, "AUTH401", "유효하지 않은 Refresh Token입니다. 다시 로그인해주세요."),
+    _WITHDRAWAL_RESTRICTION(HttpStatus.FORBIDDEN, "AUTH403", "탈퇴 후 7일간 재가입할 수 없습니다."),
+    _TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "AUTH404", "토큰을 찾을 수 없습니다."),
+    _SOCIAL_LOGIN_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "AUTH500", "소셜 로그인 서버와의 통신에 실패했습니다."),
 
+    // 닉네임 오류
     _NICKNAME_INVALID(HttpStatus.BAD_REQUEST, "USER400", "닉네임은 특수문자를 제외한 3~10자리여야 합니다."),
     _NICKNAME_EMPTY(HttpStatus.BAD_REQUEST, "USER400", "닉네임을 입력해주세요."),
-
-    // 닉네임 중복 오류
     _NICKNAME_CONFLICT(HttpStatus.CONFLICT, "USER409", "이미 사용 중인 닉네임입니다."),
+
+    // Member 없음 오류
+    _MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER404", "사용자가 없습니다."),
 
     // AI 상담사 중복 오류
     COUNSELOR_ALREADY_EXISTS(HttpStatus.CONFLICT, "COUNSELOR409", "이미 상담사 설정이 존재합니다."),
     COUNSELOR_NOT_FOUND(HttpStatus.NOT_FOUND, "COUNSELOR404", "상담사 설정을 찾을 수 없습니다."),
-    _WITHDRAWAL_RESTRICTION(HttpStatus.FORBIDDEN, "USER403", "탈퇴 후 7일간 재가입할 수 없습니다."),
-    _TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "USER404", "토큰을 찾을 수 없습니다."),
 
     // 진단 오류
     _DIAGNOSE_NOT_FOUND(HttpStatus.NOT_FOUND, "DIAGNOSE404", "검사 결과가 없습니다."),
