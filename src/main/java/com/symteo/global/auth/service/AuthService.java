@@ -145,7 +145,7 @@ public class AuthService {
         User newUser = User.builder()
                 .socialType(socialUser.getSocialType())
                 .socialId(socialUser.getSocialId())
-                .role(Role.GUEST) // 초기엔 GUEST
+                .role(Role.GUEST)
                 .build();
         return userRepository.save(newUser);
     }
@@ -168,12 +168,12 @@ public class AuthService {
 
         // 1. 넘어온 Refresh Token이 유효한지 검사 (위조 여부 확인)
         if (!jwtProvider.validateToken(refreshToken)) {
-            throw new IllegalArgumentException("유효하지 않은 Refresh Token입니다. 다시 로그인해주세요.");
+            throw new GeneralException(ErrorStatus._INVALID_REFRESH_TOKEN);
         }
 
         // 2. DB에서 해당 Refresh Token을 가진 정보 확인
         UserTokens userTokens = userTokenRepository.findByRefreshToken(refreshToken)
-                .orElseThrow(() -> new IllegalArgumentException("토큰 정보를 찾을 수 없습니다."));
+                .orElseThrow(() -> new GeneralException(ErrorStatus._TOKEN_NOT_FOUND));
 
         // 3. 토큰 주인(User) 정보 가져오기
         User user = userTokens.getUser();
