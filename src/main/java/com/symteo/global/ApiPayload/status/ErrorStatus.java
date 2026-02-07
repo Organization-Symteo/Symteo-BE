@@ -34,8 +34,9 @@ public enum ErrorStatus implements BaseErrorCode {
     // Member 없음 오류
     _MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER404", "사용자가 없습니다."),
 
-    // User 오류
-    // _MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER404", "사용자가 없습니다."),
+    //소셜 로그인 오류
+    _SOCIAL_LOGIN_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "AUTH_500", "소셜 로그인 서버와의 통신에 실패했습니다."),
+    _INVALID_PROVIDER(HttpStatus.BAD_REQUEST, "AUTH_400", "지원하지 않는 소셜 로그인 제공자입니다."),
 
     _NICKNAME_INVALID(HttpStatus.BAD_REQUEST, "USER400", "닉네임은 특수문자를 제외한 3~10자리여야 합니다."),
     _NICKNAME_EMPTY(HttpStatus.BAD_REQUEST, "USER400", "닉네임을 입력해주세요."),
