@@ -21,7 +21,7 @@ public class CounselMessageConverter {
     private static Message toAiMessage(ChatMessage m) {
         return switch (m.getRole()) {
             case USER -> new UserMessage(m.getMessage());
-            case AI -> new AssistantMessage(m.getMessage());
+            case AI, REPORT -> new AssistantMessage(m.getMessage());
             case ADMIN -> new SystemMessage(m.getMessage());
         };
     }

@@ -1,13 +1,27 @@
-FROM amazoncorretto:17-alpine
+# ---------- 1. 자바 빌드 (로컬) ----------
+FROM amazoncorretto:17-alpine AS builder
 
-# 컨테이너 내 작업 디렉토리 설정
 WORKDIR /app
 
-# GitHub Actions 빌드 단계에서 생성된 jar 파일을 컨테이너로 복사
-COPY build/libs/*.jar app.jar
+# Gradle 캐시 최적화
+COPY gradlew .
+COPY gradle gradle
+COPY build.gradle settings.gradle ./
+RUN chmod +x gradlew
+RUN ./gradlew dependencies --no-daemon || true
 
-# 실행 권한 부여 및 포트 설정 (필요시)
+# 소스 복사 & 빌드
+COPY src src
+RUN ./gradlew clean build -x test --no-daemon
+
+
+# ---------- 2. 빌드 파일 동작 (로컬, AWS 공용) ----------
+FROM amazoncorretto:17-alpine
+
+WORKDIR /app
+
+COPY --from=builder /app/build/libs/*.jar app.jar
+
 EXPOSE 8080
 
-# 어플리케이션 실행
 ENTRYPOINT ["java", "-jar", "app.jar"]

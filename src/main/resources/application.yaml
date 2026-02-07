@@ -64,6 +64,18 @@ springdoc:
 jwt:
   secret: ${JWT_SECRET}
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus, health, metrics
+  endpoint:
+    prometheus:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
 cloud:
   aws:
     credentials:
