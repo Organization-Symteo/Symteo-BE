@@ -44,17 +44,17 @@ oauth:
   google:
     client-id: ${GOOGLE_CLIENT_ID}
     client-secret: ${GOOGLE__CLIENT_SECRET}
-    redirect-uri: http://ec2-13-209-158-163.ap-northeast-2.compute.amazonaws.com:8080/login/oauth2/code/google
+    redirect-uri: ${GOOGLE_REDIRECT_URL}
 
   naver:
     client-id: ${NAVER_CLIENT_ID}
     client-secret: ${NAVER_CLIENT_SECRET}
-    redirect-uri: http://ec2-13-209-158-163.ap-northeast-2.compute.amazonaws.com:8080/login/oauth2/code/naver
+    redirect-uri: ${NAVER_REDIRECT_URL}
 
   kakao:
     client-id: ${KAKAO_CLIENT_ID}
     client-secret: ${KAKAO_CLIENT_SECRET}
-    redirect-uri: http://ec2-13-209-158-163.ap-northeast-2.compute.amazonaws.com:8080/login/oauth2/code/kakao
+    redirect-uri: ${KAKAO_REDIRECT_URL}
 
 springdoc:
   swagger-ui:
