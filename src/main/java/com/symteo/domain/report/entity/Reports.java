@@ -1,5 +1,6 @@
 package com.symteo.domain.report.entity;
 
+import com.symteo.domain.diagnose.enums.DiagnoseType;
 import com.symteo.domain.report.entity.mapping.AnxietyReports;
 import com.symteo.domain.report.entity.mapping.AttachmentReports;
 import com.symteo.domain.report.entity.mapping.DepressionReports;
@@ -23,7 +24,8 @@ public class Reports {
     private User user;
 
     @Column(name = "r_type")
-    private String rType;
+    @Enumerated(EnumType.STRING)
+    private DiagnoseType rType;
 
     @Column(name = "diagnose_id")
     private Long diagnoseId;

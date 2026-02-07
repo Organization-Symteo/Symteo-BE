@@ -1,6 +1,7 @@
 package com.symteo.domain.report.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.symteo.domain.diagnose.enums.DiagnoseType;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -12,7 +13,7 @@ public class ReportsResponse {
     @NoArgsConstructor @AllArgsConstructor
     public static class CreateReportResult {
         private Long reportId;
-        private String testType;
+        private DiagnoseType testType;
         private LocalDateTime createdAt;
     }
 
@@ -21,7 +22,7 @@ public class ReportsResponse {
     @NoArgsConstructor @AllArgsConstructor
     public static class DepressionAnxietyReportDetail {
         private Long reportId;
-        private String testType;
+        private DiagnoseType testType;
         private OverallSummary summary;         // 종합 결과
         private PhqDetail phq9;                // 우울 섹션
         private GadDetail gad7;                // 불안 섹션
@@ -77,7 +78,7 @@ public class ReportsResponse {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class IntegratedReportDetail {
         private Long reportId;
-        private String testType;
+        private DiagnoseType testType;
         private int batteryPercent;
         private String batteryColor;
         private String batteryGuide;

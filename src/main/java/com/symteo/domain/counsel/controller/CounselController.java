@@ -7,6 +7,11 @@ import com.symteo.domain.counsel.service.CounselCommandService;
 import com.symteo.domain.counsel.service.CounselQueryService;
 import com.symteo.domain.counsel.service.CounselorService;
 
+import com.symteo.domain.diagnose.enums.DiagnoseType;
+import com.symteo.domain.diagnose.repository.DiagnoseRepository;
+import com.symteo.domain.report.service.AttachmentReportsService;
+import com.symteo.domain.report.service.DepressionAnxietyReportsService;
+import com.symteo.domain.report.service.StressReportsService;
 import com.symteo.global.ApiPayload.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +26,7 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/counsel")
+@RequestMapping("/api/v1/counsels")
 @RequiredArgsConstructor
 public class CounselController {
 
@@ -30,7 +35,7 @@ public class CounselController {
     private final CounselorService counselorService;
 
     // AI 상담 요청 보내기
-    @PostMapping("/request")
+    @PostMapping("")
     public ApiResponse<CounselResDTO.ChatMessage> askAI(
             @AuthenticationPrincipal Long userId,
             @RequestBody CounselReqDTO.ChatMessage dto
@@ -38,8 +43,17 @@ public class CounselController {
         return ApiResponse.onSuccess(counselCommandService.askCounsel(userId, dto));
     }
 
+    // 리포트 불러오기
+    @PostMapping("/report")
+    public ApiResponse<CounselResDTO.ChatMessage> askAiReport(
+            @AuthenticationPrincipal Long userId,
+            @RequestBody CounselReqDTO.ChatReport dto
+    ){
+        return ApiResponse.onSuccess(counselCommandService.askReport(userId, dto));
+    }
+
     // AI 상담 종료하기
-    @PatchMapping("/save")
+    @PatchMapping("")
     public ApiResponse<CounselResDTO.ChatSummary> summaryAI(
             @AuthenticationPrincipal Long userId,
             @RequestBody CounselReqDTO.ChatSummary dto
@@ -49,7 +63,7 @@ public class CounselController {
 
     // 전체 상담 조회하기
     // 나중에 Spring JWT에서 토큰 속 id를 찾자
-    @GetMapping("/all")
+    @GetMapping("")
     public ApiResponse<List<CounselResDTO.Chat>> getAllChat(
             @AuthenticationPrincipal Long userId
     ){
@@ -75,7 +89,7 @@ public class CounselController {
     }
 
     // 상담사 초기 설정 저장
-    @PostMapping("/settings")
+    @PutMapping("/setting")
     public ResponseEntity<String> saveSettings(@RequestBody CounselorSettingReqDTO request) {
 
         counselorService.saveSettings(request);

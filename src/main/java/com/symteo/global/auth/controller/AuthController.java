@@ -19,7 +19,7 @@ public class AuthController {
             @PathVariable String provider,
             @RequestBody LoginRequest request
     ) {
-        AuthResponse response = authService.login(provider, request.getToken());
+        AuthResponse response = authService.login(provider, request.getAuthCode());
         return ApiResponse.onSuccess(response);
     }
 

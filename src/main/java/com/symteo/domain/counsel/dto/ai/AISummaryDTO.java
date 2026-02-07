@@ -1,4 +1,4 @@
-package com.symteo.domain.counsel.dto;
+package com.symteo.domain.counsel.dto.ai;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;

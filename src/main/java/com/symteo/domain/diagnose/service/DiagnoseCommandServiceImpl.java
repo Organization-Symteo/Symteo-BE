@@ -10,6 +10,8 @@ import com.symteo.domain.diagnose.repository.DiagnoseRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
+
 @Service
 @RequiredArgsConstructor
 public class DiagnoseCommandServiceImpl implements DiagnoseCommandService{
@@ -17,17 +19,22 @@ public class DiagnoseCommandServiceImpl implements DiagnoseCommandService{
     private final DiagnoseRepository diagnoseRepository;
 
     @Override
-    public DiagnoseResDTO.CreateDTO createDiagnose(DiagnoseReqDTO.DiagnoseDTO dto) {
+    public DiagnoseResDTO.CreateDTO createDiagnose(Long userId, DiagnoseReqDTO.DiagnoseDTO dto) {
 
-        Diagnose savedDiagnose = diagnoseRepository.save(DiagnoseConverter.toDiagnose(dto));
+        Diagnose savedDiagnose = diagnoseRepository.save(DiagnoseConverter.toDiagnose(userId, dto));
         return new DiagnoseResDTO.CreateDTO(savedDiagnose.getId());
     }
 
     @Override
-    public DiagnoseResDTO.DeleteDTO deleteDiagnose(Long diagnoseId) {
+    public DiagnoseResDTO.DeleteDTO deleteDiagnose(Long userId, Long diagnoseId) {
 
         Diagnose diagnose = diagnoseRepository.findById(diagnoseId)
                 .orElseThrow(() -> new DiagnoseException(DiagnoseErrorCode._DIAGNOSE_NOT_FOUND));
+
+        if(!Objects.equals(diagnose.getUserId(), userId)){ // null 안전 eqauls
+            throw new DiagnoseException(DiagnoseErrorCode._DIAGNOSE_ACCESS_DENIED);
+        }
+
         diagnoseRepository.delete(diagnose);
         return new DiagnoseResDTO.DeleteDTO(diagnose.getId());
     }
