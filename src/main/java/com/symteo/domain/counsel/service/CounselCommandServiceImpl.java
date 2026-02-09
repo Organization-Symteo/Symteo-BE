@@ -155,16 +155,16 @@ public class CounselCommandServiceImpl implements CounselCommandService{
     // 전체 채팅, AI 채팅, 유저 채팅을 각각 요약한다.
     @Transactional
     @Override
-    public CounselResDTO.ChatSummary summaryCounsel(Long userId, CounselReqDTO.ChatSummary dto) {
+    public CounselResDTO.ChatSummary summaryCounsel(Long userId, Long counselId) {
         // 1) 채팅방 찾기
-        ChatRoom chatRoom = chatRoomRepository.findById(dto.chatRoomId())
+        ChatRoom chatRoom = chatRoomRepository.findById(counselId)
                 .orElseThrow(() -> new CounselException(CounselErrorCode._CHATROOM_NOT_FOUND));
 
         // 2) 채팅 내역 가져오기
         List<ChatMessage> chatMessages = chatRoom.getChatMessages();
-        List<ChatMessage> aiMessages = chatMessageRepository.findAllByChatRoom_ChatroomIdAndRole(dto.chatRoomId(), Role.AI)
+        List<ChatMessage> aiMessages = chatMessageRepository.findAllByChatRoom_ChatroomIdAndRole(counselId, Role.AI)
                 .orElseThrow(() -> new CounselException(CounselErrorCode._CHATMESSAGE_NOT_FOUND));
-        List<ChatMessage> userMessages = chatMessageRepository.findAllByChatRoom_ChatroomIdAndRole(dto.chatRoomId(), Role.USER)
+        List<ChatMessage> userMessages = chatMessageRepository.findAllByChatRoom_ChatroomIdAndRole(counselId, Role.USER)
                 .orElseThrow(() -> new CounselException(CounselErrorCode._CHATMESSAGE_NOT_FOUND));
 
         // 3) 프롬프트 설정

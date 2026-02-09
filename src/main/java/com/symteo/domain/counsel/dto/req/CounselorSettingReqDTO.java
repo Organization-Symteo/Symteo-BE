@@ -1,18 +1,17 @@
 package com.symteo.domain.counsel.dto.req;
 
 import com.symteo.domain.counsel.enums.*;
-import groovyjarjarantlr4.v4.runtime.misc.NotNull;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 
-@Getter
-@NoArgsConstructor
+import javax.validation.constraints.NotNull;
+
 public class CounselorSettingReqDTO {
-    private Long userId;
 
-    private Atmosphere atmosphere;
-    private Support_Style supportStyle;
-    private Counselor_Role roleCounselor;
-    private Answer_Format answerFormat;
-    private Tone tone;
+    public record CounselorSetting(
+            @NotNull Atmosphere atmosphere,
+            @NotNull Support_Style supportStyle,
+            @NotNull Counselor_Role roleCounselor,
+            @NotNull Answer_Format answerFormat,
+            @NotNull Tone tone
+    ){}
+
 }

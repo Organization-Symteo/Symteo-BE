@@ -6,22 +6,13 @@ import com.symteo.domain.counsel.dto.res.CounselResDTO;
 import com.symteo.domain.counsel.service.CounselCommandService;
 import com.symteo.domain.counsel.service.CounselQueryService;
 import com.symteo.domain.counsel.service.CounselorService;
-
-import com.symteo.domain.diagnose.enums.DiagnoseType;
-import com.symteo.domain.diagnose.repository.DiagnoseRepository;
-import com.symteo.domain.report.service.AttachmentReportsService;
-import com.symteo.domain.report.service.DepressionAnxietyReportsService;
-import com.symteo.domain.report.service.StressReportsService;
 import com.symteo.global.ApiPayload.ApiResponse;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.nio.file.attribute.UserPrincipal;
-
+import javax.validation.Valid;
 import java.util.List;
 
 @Slf4j
@@ -38,7 +29,7 @@ public class CounselController {
     @PostMapping("")
     public ApiResponse<CounselResDTO.ChatMessage> askAI(
             @AuthenticationPrincipal Long userId,
-            @RequestBody CounselReqDTO.ChatMessage dto
+            @RequestBody @Valid CounselReqDTO.ChatMessage dto
     ){
         return ApiResponse.onSuccess(counselCommandService.askCounsel(userId, dto));
     }
@@ -47,18 +38,18 @@ public class CounselController {
     @PostMapping("/report")
     public ApiResponse<CounselResDTO.ChatMessage> askAiReport(
             @AuthenticationPrincipal Long userId,
-            @RequestBody CounselReqDTO.ChatReport dto
+            @RequestBody @Valid CounselReqDTO.ChatReport dto
     ){
         return ApiResponse.onSuccess(counselCommandService.askReport(userId, dto));
     }
 
     // AI 상담 종료하기
-    @PatchMapping("")
+    @PatchMapping("{counselId}/summary")
     public ApiResponse<CounselResDTO.ChatSummary> summaryAI(
             @AuthenticationPrincipal Long userId,
-            @RequestBody CounselReqDTO.ChatSummary dto
+            @PathVariable Long counselId
     ){
-        return ApiResponse.onSuccess(counselCommandService.summaryCounsel(userId, dto));
+        return ApiResponse.onSuccess(counselCommandService.summaryCounsel(userId, counselId));
     }
 
     // 전체 상담 조회하기
@@ -90,11 +81,11 @@ public class CounselController {
 
     // 상담사 초기 설정 저장
     @PutMapping("/setting")
-    public ResponseEntity<String> saveSettings(@RequestBody CounselorSettingReqDTO request) {
-
-        counselorService.saveSettings(request);
-
-        return ResponseEntity.ok("상담사 초기 설정이 저장되었습니다.");
+    public ApiResponse<Long> saveSettings(
+            @AuthenticationPrincipal Long userId,
+            @RequestBody @Valid CounselorSettingReqDTO.CounselorSetting request
+    ) {
+        return ApiResponse.onSuccess(counselorService.saveSettings(userId, request));
     }
 
 }
