@@ -69,6 +69,7 @@ public class ReportsResponse {
     public static class AiInsightCard {
         private String id;
         private String title;
+        private String subtitle;                // subtitle 추가
     }
 
     // 스트레스/번아웃 리포트 상세
