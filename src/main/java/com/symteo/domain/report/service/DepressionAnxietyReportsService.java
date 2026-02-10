@@ -165,15 +165,29 @@ public class DepressionAnxietyReportsService {
         List<ReportsResponse.AiInsightCard> cards = new ArrayList<>();
         for (DiagnoseReqDTO.AnswerDTO a : answers) {
             if (a.score() >= 2) {
-                switch (a.questionNo().intValue()) {
-                    case 3 -> cards.add(new ReportsResponse.AiInsightCard("sleep_issue", "수면 장애 심각"));
-                    case 11 -> cards.add(new ReportsResponse.AiInsightCard("worry_issue", "지속적인 걱정"));
-                    case 15 -> cards.add(new ReportsResponse.AiInsightCard("tension_issue", "신체적 긴장"));
-                    case 7 -> cards.add(new ReportsResponse.AiInsightCard("focus_issue", "집중력 저하"));
+                long qNo = a.questionNo();
+
+                // 트리거 태그(subtitle) 생성 로직
+                String triggerTag = (qNo <= 9) ? "(PHQ-9 #" + qNo + ")" : "(GAD-7 #" + (qNo - 9) + ")";
+
+                switch ((int) qNo) {
+                    case 3 -> cards.add(createCard("sleep_issue", "수면 장애 심각", triggerTag));
+                    case 7 -> cards.add(createCard("focus_issue", "집중력 저하", triggerTag));
+                    case 11 -> cards.add(createCard("worry_issue", "지속적인 걱정", triggerTag));
+                    case 15 -> cards.add(createCard("tension_issue", "신체적 긴장", triggerTag));
                 }
             }
         }
         return cards;
+    }
+
+    // 헬퍼 메서드 추가
+    private ReportsResponse.AiInsightCard createCard(String id, String title, String subtitle) {
+        return ReportsResponse.AiInsightCard.builder()
+                .id(id)
+                .title(title)
+                .subtitle(subtitle)
+                .build();
     }
 
     // 수치 계산 및 데이터 저장 헬퍼
