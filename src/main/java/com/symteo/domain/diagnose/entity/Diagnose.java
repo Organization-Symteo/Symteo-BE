@@ -16,7 +16,6 @@ import java.util.List;
 @Table(name = "diagnoses")
 @Builder
 @Getter
-@Setter
 @RequiredArgsConstructor
 @AllArgsConstructor
 public class Diagnose {
