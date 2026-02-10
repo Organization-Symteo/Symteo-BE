@@ -15,13 +15,6 @@ import com.symteo.domain.counsel.exception.code.CounselException;
 import com.symteo.domain.counsel.repository.ChatMessageRepository;
 import com.symteo.domain.counsel.repository.ChatRoomRepository;
 import com.symteo.domain.counsel.repository.CounselorSettingRepository;
-import com.symteo.domain.report.dto.ReportsResponse;
-import com.symteo.domain.report.service.AttachmentReportsService;
-import com.symteo.domain.report.service.DepressionAnxietyReportsService;
-import com.symteo.domain.report.service.StressReportsService;
-import com.symteo.domain.user.repository.UserRepository;
-import com.symteo.global.ApiPayload.exception.GeneralException;
-import com.symteo.global.ApiPayload.status.ErrorStatus;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +25,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -63,6 +55,10 @@ public class CounselCommandServiceImpl implements CounselCommandService{
                 ? chatRoomRepository.save(CounselConverter.toChatRoom(userId))
                 : chatRoomRepository.findById(dto.chatRoomId())
                 .orElseThrow(() -> new CounselException(CounselErrorCode._CHATROOM_NOT_FOUND));
+
+        if(!chatRoom.getUserId().equals(userId)){
+            throw new CounselException(CounselErrorCode._CHATROOM_ACCESS_DENIED);
+        }
 
         // 1) 이전 상담 내역 호출
         List<ChatMessage> readMessages = chatMessageRepository.getRecentMessages(userId, PageRequest.of(0, 10))
@@ -109,6 +105,7 @@ public class CounselCommandServiceImpl implements CounselCommandService{
     }
 
     /// --- 2. 리포트 분석 요청 메소드
+    @Transactional
     @Override
     public CounselResDTO.ChatMessage askReport(Long userId, CounselReqDTO.ChatReport dto) {
 
@@ -116,6 +113,10 @@ public class CounselCommandServiceImpl implements CounselCommandService{
                 ? chatRoomRepository.save(CounselConverter.toChatRoom(userId))
                 : chatRoomRepository.findById(dto.chatRoomId())
                 .orElseThrow(() -> new CounselException(CounselErrorCode._CHATROOM_NOT_FOUND));
+
+        if(!chatRoom.getUserId().equals(userId)){
+            throw new CounselException(CounselErrorCode._CHATROOM_ACCESS_DENIED);
+        }
 
         // 1) 진단 타입 확인, 리포트 가져오기
         String systemText = switch (dto.reportType()) {
@@ -155,16 +156,20 @@ public class CounselCommandServiceImpl implements CounselCommandService{
     // 전체 채팅, AI 채팅, 유저 채팅을 각각 요약한다.
     @Transactional
     @Override
-    public CounselResDTO.ChatSummary summaryCounsel(Long userId, CounselReqDTO.ChatSummary dto) {
+    public CounselResDTO.ChatSummary summaryCounsel(Long userId, Long counselId) {
         // 1) 채팅방 찾기
-        ChatRoom chatRoom = chatRoomRepository.findById(dto.chatRoomId())
+        ChatRoom chatRoom = chatRoomRepository.findById(counselId)
                 .orElseThrow(() -> new CounselException(CounselErrorCode._CHATROOM_NOT_FOUND));
+
+        if(!chatRoom.getUserId().equals(userId)){
+            throw new CounselException(CounselErrorCode._CHATROOM_ACCESS_DENIED);
+        }
 
         // 2) 채팅 내역 가져오기
         List<ChatMessage> chatMessages = chatRoom.getChatMessages();
-        List<ChatMessage> aiMessages = chatMessageRepository.findAllByChatRoom_ChatroomIdAndRole(dto.chatRoomId(), Role.AI)
+        List<ChatMessage> aiMessages = chatMessageRepository.findAllByChatRoom_ChatroomIdAndRole(counselId, Role.AI)
                 .orElseThrow(() -> new CounselException(CounselErrorCode._CHATMESSAGE_NOT_FOUND));
-        List<ChatMessage> userMessages = chatMessageRepository.findAllByChatRoom_ChatroomIdAndRole(dto.chatRoomId(), Role.USER)
+        List<ChatMessage> userMessages = chatMessageRepository.findAllByChatRoom_ChatroomIdAndRole(counselId, Role.USER)
                 .orElseThrow(() -> new CounselException(CounselErrorCode._CHATMESSAGE_NOT_FOUND));
 
         // 3) 프롬프트 설정

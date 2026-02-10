@@ -8,7 +8,7 @@ public interface CounselCommandService {
 
     public CounselResDTO.ChatMessage askReport(Long userId, CounselReqDTO.ChatReport dto);
 
-    public CounselResDTO.ChatSummary summaryCounsel(Long userId, CounselReqDTO.ChatSummary dto);
+    public CounselResDTO.ChatSummary summaryCounsel(Long userId, Long counselId);
 
     public Long deleteChat(Long userId, Long chatRoomId);
 
