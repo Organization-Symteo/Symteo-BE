@@ -5,7 +5,6 @@ import com.symteo.global.auth.dto.*;
 import com.symteo.global.auth.service.AuthService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -29,8 +28,8 @@ import java.nio.charset.StandardCharsets;
             AuthResponse auth = authService.login(provider, code);
 
             String redirectUrl = "symteo-auth://oauth"
-                    + "?accessToken=" + URLEncoder.encode(auth.getAccessToken(), StandardCharsets.UTF_8)
-                    + "&refreshToken=" + URLEncoder.encode(auth.getRefreshToken(), StandardCharsets.UTF_8);
+                    + "?accessToken=" + URLEncoder.encode(auth.accessToken(), StandardCharsets.UTF_8)
+                    + "&refreshToken=" + URLEncoder.encode(auth.refreshToken(), StandardCharsets.UTF_8);
 
             response.sendRedirect(redirectUrl);
         }
@@ -46,7 +45,7 @@ import java.nio.charset.StandardCharsets;
     @PostMapping("/logout")
     public ApiResponse<String> logout(@RequestBody LogoutRequest request) {
         authService.logout(request.getRefreshToken());
-        return ApiResponse.onSuccess("로그아웃 되었습니다.");
+        return ApiResponse.onSuccess("로그아웃이 완료되었습니다.");
     }
 
     // 4. 회원 탈퇴

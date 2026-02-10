@@ -14,7 +14,7 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/users/")
+@RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
@@ -120,8 +120,5 @@ public class UserController {
         UpdateMissionResponse response = userService.updateMission(userId, userMissionId, request, images);
         return ApiResponse.onSuccess(response);
     }
-
-    // response DTO
-    record NicknameCheckResponse(boolean isDuplicated) {}
 
 }

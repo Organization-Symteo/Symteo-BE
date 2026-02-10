@@ -1,10 +1,10 @@
-package com.symteo.global.oauth.service;
+package com.symteo.global.auth.oauth.service;
 
 import com.symteo.domain.user.enums.SocialType;
-import com.symteo.global.oauth.impl.GoogleUserInfo;
-import com.symteo.global.oauth.impl.KakaoUserInfo;
-import com.symteo.global.oauth.impl.NaverUserInfo;
-import com.symteo.global.oauth.info.SocialUserInfo;
+import com.symteo.global.auth.oauth.impl.GoogleUserInfo;
+import com.symteo.global.auth.oauth.impl.KakaoUserInfo;
+import com.symteo.global.auth.oauth.impl.NaverUserInfo;
+import com.symteo.global.auth.oauth.info.SocialUserInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import lombok.extern.slf4j.Slf4j;

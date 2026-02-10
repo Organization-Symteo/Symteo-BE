@@ -1,4 +1,4 @@
-package com.symteo.global.oauth.info;
+package com.symteo.global.auth.oauth.info;
 
 import com.symteo.domain.user.enums.SocialType;
 
