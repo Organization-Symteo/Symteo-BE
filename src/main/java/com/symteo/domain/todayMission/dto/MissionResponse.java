@@ -11,11 +11,13 @@ public class MissionResponse {
     private String contents;
     private long remainingSeconds;
     private boolean isRestarted;
+    private boolean isCompleted;
 
     public static MissionResponse from(UserMissions userMission, long remainingSeconds) {
         return MissionResponse.builder()
                 .contents(userMission.getMissions().getMissionContents())
                 .remainingSeconds(remainingSeconds)
+                .isCompleted(userMission.isCompleted())
                 .isRestarted(userMission.isRestarted()) // UserMissions의 필드 사용
                 .build();
     }

@@ -1,12 +1,13 @@
 package com.symteo.domain.todayMission.service;
 
-import com.symteo.domain.report.repository.DepressionReportsRepository;
-import com.symteo.domain.report.repository.StressReportsRepository;
+import com.symteo.domain.report.service.DepressionAnxietyReportsService;
+import com.symteo.domain.report.service.StressReportsService;
 import com.symteo.domain.todayMission.dto.*;
 import com.symteo.domain.todayMission.entity.Missions;
 import com.symteo.domain.todayMission.entity.mapping.Drafts;
 import com.symteo.domain.todayMission.entity.mapping.MissionImages;
 import com.symteo.domain.todayMission.entity.mapping.UserMissions;
+import com.symteo.domain.todayMission.exception.TodayMissionErrorCode;
 import com.symteo.domain.todayMission.repository.DraftRepository;
 import com.symteo.domain.todayMission.repository.MissionImageRepository;
 import com.symteo.domain.todayMission.repository.MissionRepository;
@@ -28,7 +29,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class MissionService {
+public class MissionCommandService {
 
     private final MissionRepository missionRepository;
     private final UserMissionRepository userMissionRepository;
@@ -37,8 +38,8 @@ public class MissionService {
     private final MissionImageRepository missionImageRepository;
     private final S3Service s3Service;
 
-    private final StressReportsRepository stressReportsRepository;
-    private final DepressionReportsRepository depressionRepository;
+    private final DepressionAnxietyReportsService depressionAnxietyReportsService;
+    private final StressReportsService stressReportsService;
 
     // 매일 자정 자동으로 미션 생성 및 사용자에게 할당
     @Scheduled(cron = "0 0 0 * * *")
@@ -50,17 +51,13 @@ public class MissionService {
     // 사용자별 맞춤 미션 할당
     @Transactional
     public void generateMissionForUser(User user) {
-        // 상태 판별
-        boolean isDA = depressionRepository.findTopByUserOrderByDeReportIdDesc(user)
-                .map(r -> !r.getSeverity().equals("정상")).orElse(false);
+        boolean isDA = depressionAnxietyReportsService.checkIsUnstable(user);
+        boolean isST = stressReportsService.checkIsLowControl(user);
 
-        boolean isST = stressReportsRepository.findTopByUserOrderByStReportIdDesc(user)
-                .map(r -> r.getControlPercent() <= 68.0).orElse(false);
-
-        // 미션 할당 횟수(N) 계산 (주기 판단용)
+        // 미션 할당 횟수(N) 계산
         long n = userMissionRepository.countByUser(user) + 1;
 
-        // 알고리즘에 따른 카테고리 결정
+        // 카테고리 결정 알고리즘
         String targetCategory = determineCategory(isDA, isST, n);
 
         // 중복 제외 랜덤 추출
@@ -99,24 +96,6 @@ public class MissionService {
         return "BASIC"; // Case A: 일반
     }
 
-    // 오늘의 미션 조회 api
-    public MissionResponse getTodayMission(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new GeneralException(ErrorStatus._MEMBER_NOT_FOUND));
-
-        UserMissions userMission = userMissionRepository.findTopByUserOrderByUserMissionIdDesc(user)
-                .orElseThrow(() -> new GeneralException(ErrorStatus._MISSION_NOT_FOUND));
-
-        Missions mission = userMission.getMissions();
-
-        long remainingSeconds = Math.max(
-                Duration.between(LocalDateTime.now(), mission.getDeadLine()).getSeconds(),
-                0
-        );
-
-        return MissionResponse.from(userMission, remainingSeconds);
-    }
-
     // 오늘의 미션 시작 api
     @Transactional
     public UserMissionStartResponse startMission(Long missionId, Long userId, String contents, MultipartFile image) {
@@ -133,6 +112,12 @@ public class MissionService {
         UserMissions userMission = userMissionRepository.findTopByUserOrderByUserMissionIdDesc(user)
                 .filter(um -> um.getMissions().getMissionId().equals(missionId))
                 .orElseThrow(() -> new GeneralException(ErrorStatus._USER_MISSION_NOT_FOUND));
+
+        if (userMission.isCompleted()) {
+            throw new GeneralException(TodayMissionErrorCode._MISSION_ALREADY_COMPLETED);
+        }
+
+        validateMissionOwner(userMission, userId);
 
         if (contents != null && !contents.isBlank()) {
             Drafts draft = draftRepository.findTopByUserMissions(userMission)
@@ -164,6 +149,12 @@ public class MissionService {
         Drafts draft = draftRepository.findTopByUserMissions(userMission)
                 .orElseGet(() -> draftRepository.save(Drafts.builder().userMissions(userMission).contents(contents).build()));
 
+        if (userMission.isCompleted()) {
+            throw new GeneralException(TodayMissionErrorCode._MISSION_ALREADY_COMPLETED);
+        }
+
+        validateMissionOwner(userMission, userId);
+
         draft.updateContents(contents);
         userMission.markDrafted();
 
@@ -180,6 +171,12 @@ public class MissionService {
         UserMissions userMission = userMissionRepository.findById(userMissionId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus._USER_MISSION_NOT_FOUND));
 
+        if (userMission.isCompleted()) {
+            throw new GeneralException(ErrorStatus._MISSION_ALREADY_COMPLETED);
+        }
+
+        validateMissionOwner(userMission, userId);
+
         userMission.complete();
         return UserMissionCompletedResponse.builder()
                 .userMissionId(userMission.getUserMissionId())
@@ -193,21 +190,21 @@ public class MissionService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus._MEMBER_NOT_FOUND));
 
-        // 1. 오늘 할당된 미션 조회
+        // 오늘 할당된 미션 조회
         UserMissions userMission = userMissionRepository.findTopByUserOrderByUserMissionIdDesc(user)
                 .orElseThrow(() -> new GeneralException(ErrorStatus._MISSION_NOT_FOUND));
 
-        // 2. 하루 1회 제한 체크 (이미 새로고침 했는지 확인)
+        // 하루 1회 제한 체크 (이미 새로고침 했는지 확인)
         if (userMission.isRestarted()) {
             throw new GeneralException(ErrorStatus._MISSION_REFRESH_EXCEEDED);
         }
 
-        // 3. 완료된 미션은 새로고침 불가
+        // 완료된 미션은 새로고침 불가
         if (userMission.isCompleted()) {
             throw new GeneralException(ErrorStatus._MISSION_ALREADY_COMPLETED);
         }
 
-        // 4. 현재 카테고리 유지하면서 중복 제외하고 다른 미션 찾기
+        // 현재 카테고리 유지하면서 중복 제외하고 다른 미션 찾기
         String currentCategory = userMission.getMissions().getCategory();
         List<Long> excludeIds = userMissionRepository.findCompletedMissionIds(userId);
         excludeIds.add(userMission.getMissions().getMissionId());
@@ -215,7 +212,7 @@ public class MissionService {
         Missions newMission = missionRepository.findRandomByCategory(currentCategory, excludeIds)
                 .orElseThrow(() -> new GeneralException(ErrorStatus._NO_MORE_MISSIONS));
 
-        // 5. 엔티티 업데이트 (is_restarted = true 반영)
+        // 엔티티 업데이트 (is_restarted = true 반영)
         userMission.refresh(newMission);
 
         long remainingSeconds = Math.max(
@@ -224,5 +221,12 @@ public class MissionService {
         );
 
         return MissionResponse.from(userMission, remainingSeconds);
+    }
+
+    // 소유권 검증 메소드
+    private void validateMissionOwner(UserMissions userMission, Long userId) {
+        if (!userMission.getUser().getId().equals(userId)) {
+            throw new GeneralException(TodayMissionErrorCode._MISSION_FORBIDDEN);
+        }
     }
 }
