@@ -5,6 +5,7 @@ import com.symteo.domain.diagnose.dto.res.DiagnoseResDTO;
 import com.symteo.domain.diagnose.service.DiagnoseCommandService;
 import com.symteo.domain.diagnose.service.DiagnoseQueryService;
 import com.symteo.global.ApiPayload.ApiResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -23,7 +24,7 @@ public class DiagnoseController {
     @PostMapping("")
     public ApiResponse<DiagnoseResDTO.CreateDTO> askDiagnose(
             @AuthenticationPrincipal Long userId,
-            @RequestBody DiagnoseReqDTO.DiagnoseDTO answers
+            @RequestBody @Valid DiagnoseReqDTO.DiagnoseDTO answers
     ){
         return ApiResponse.onSuccess(diagnoseCommandService.createDiagnose(userId, answers));
     }

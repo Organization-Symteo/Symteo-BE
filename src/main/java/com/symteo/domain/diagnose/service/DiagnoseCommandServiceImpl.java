@@ -7,6 +7,7 @@ import com.symteo.domain.diagnose.entity.Diagnose;
 import com.symteo.domain.diagnose.exception.DiagnoseErrorCode;
 import com.symteo.domain.diagnose.exception.DiagnoseException;
 import com.symteo.domain.diagnose.repository.DiagnoseRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +19,7 @@ public class DiagnoseCommandServiceImpl implements DiagnoseCommandService{
 
     private final DiagnoseRepository diagnoseRepository;
 
+    @Transactional
     @Override
     public DiagnoseResDTO.CreateDTO createDiagnose(Long userId, DiagnoseReqDTO.DiagnoseDTO dto) {
 
@@ -25,6 +27,7 @@ public class DiagnoseCommandServiceImpl implements DiagnoseCommandService{
         return new DiagnoseResDTO.CreateDTO(savedDiagnose.getId());
     }
 
+    @Transactional
     @Override
     public DiagnoseResDTO.DeleteDTO deleteDiagnose(Long userId, Long diagnoseId) {
 
