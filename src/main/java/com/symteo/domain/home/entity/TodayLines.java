@@ -2,6 +2,7 @@ package com.symteo.domain.home.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -19,6 +20,7 @@ public class TodayLines {
     @Column(name = "to_line_contents", nullable = false, columnDefinition = "TEXT")
     private String contents;
 
+    @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

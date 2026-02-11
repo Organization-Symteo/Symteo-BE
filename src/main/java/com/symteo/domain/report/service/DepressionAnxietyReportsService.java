@@ -9,6 +9,7 @@ import com.symteo.domain.report.entity.DiagnoseAiReports;
 import com.symteo.domain.report.entity.Reports;
 import com.symteo.domain.report.entity.mapping.AnxietyReports;
 import com.symteo.domain.report.entity.mapping.DepressionReports;
+import com.symteo.domain.report.exception.ReportsErrorCode;
 import com.symteo.domain.report.repository.*;
 import com.symteo.domain.user.entity.User;
 import com.symteo.domain.user.repository.UserRepository;
@@ -35,9 +36,12 @@ public class DepressionAnxietyReportsService {
     private final DiagnoseRepository diagnoseRepository;
 
     // 우울/불안 리포트 생성 api
-    public ReportsResponse.CreateReportResult analyzeAndSave(Diagnose diagnose, Long userId) {
+    public ReportsResponse.CreateReportResult analyzeAndSave(Long diagnoseId, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus._MEMBER_NOT_FOUND));
+
+        com.symteo.domain.diagnose.entity.Diagnose diagnose = diagnoseRepository.findById(diagnoseId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus._DIAGNOSE_NOT_FOUND));
 
         // 중복 체크 (diagnoseId 및 rType 기준)
         Optional<Reports> existingReport = reportsRepository.findByDuplicateCheck(
@@ -83,7 +87,7 @@ public class DepressionAnxietyReportsService {
     public ReportsResponse.DepressionAnxietyReportDetail getReportDetail(Long reportId, Long userId) {
         // fetch join을 활용한 데이터 통합 조회
         Reports report = reportsRepository.findReportWithDetails(reportId)
-                .orElseThrow(() -> new GeneralException(ErrorStatus._REPORT_NOT_FOUND));
+                .orElseThrow(() -> new GeneralException(ReportsErrorCode._REPORT_NOT_FOUND));
 
         if (!report.getUser().getId().equals(userId)) {
             throw new GeneralException(ErrorStatus._UNAUTHORIZED);
@@ -249,5 +253,12 @@ public class DepressionAnxietyReportsService {
             if (score <= 4) return "최소"; if (score <= 9) return "경도";
             if (score <= 14) return "중등도"; return "고도";
         }
+    }
+
+    // 오늘의 미션 관련 판단 로직
+    public boolean checkIsUnstable(User user) {
+        return depressionRepository.findTopByUserOrderByDeReportIdDesc(user)
+                .map(r -> !r.getSeverity().equals("정상"))
+                .orElse(false);
     }
 }

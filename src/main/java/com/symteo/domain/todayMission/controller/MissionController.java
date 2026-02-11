@@ -1,9 +1,10 @@
 package com.symteo.domain.todayMission.controller;
 
 import com.symteo.domain.todayMission.dto.*;
-import com.symteo.domain.todayMission.service.MissionService;
-import com.symteo.domain.user.repository.UserRepository;
+import com.symteo.domain.todayMission.service.MissionQueryService;
+import com.symteo.domain.todayMission.service.MissionCommandService;
 import com.symteo.global.ApiPayload.ApiResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -15,8 +16,8 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/api/v1/missions")
 public class MissionController {
 
-    private final MissionService missionService;
-    private final UserRepository userRepository;
+    private final MissionCommandService missionCommandService;
+    private final MissionQueryService missionQueryService;
 
     // 오늘의 미션 조회
     @GetMapping("/today")
@@ -24,56 +25,56 @@ public class MissionController {
             @AuthenticationPrincipal Long userId
     ) {
         return ApiResponse.onSuccess(
-                missionService.getTodayMission(userId)
+                missionQueryService.getTodayMission(userId)
         );
     }
 
     // 오늘의 미션 제출 시작 (이미지 제출 병합)
     @PostMapping(
-            value = "/{missionId}/start",
+            value = "/{missionId}/submissions",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
     public ApiResponse<UserMissionStartResponse> startMission(
             @PathVariable Long missionId,
             @AuthenticationPrincipal Long userId,
-            @RequestPart(required = false) String contents,
-            @RequestPart(required = false) MultipartFile image
+            @RequestPart(value = "request") @Valid UserMissionStartRequest request,
+            @RequestPart(value = "image", required = false) MultipartFile image
     ) {
         return ApiResponse.onSuccess(
-                missionService.startMission(missionId, userId, contents, image)
+                missionCommandService.startMission(missionId, userId, request.getContents(), image)
         );
     }
 
     // 오늘의 미션 임시저장
-    @PostMapping("/{userMissionId}/draft")
+    @PostMapping("/{userMissionId}/drafts")
     public ApiResponse<DraftSaveResponse> saveDraft(
             @PathVariable Long userMissionId,
             @AuthenticationPrincipal Long userId,
-            @RequestBody DraftSaveRequest request
+            @RequestBody @Valid DraftSaveRequest request
     ) {
         return ApiResponse.onSuccess(
-                missionService.saveDraft(userMissionId, userId, request.getContents())
+                missionCommandService.saveDraft(userMissionId, userId, request.getContents())
         );
     }
 
     // 오늘의 미션 완료 처리
-    @PostMapping("/{userMissionId}/completed")
+    @PatchMapping("/{userMissionId}/status")
     public ApiResponse<UserMissionCompletedResponse> saveCompletedMission(
             @PathVariable Long userMissionId,
             @AuthenticationPrincipal Long userId
     ) {
         return ApiResponse.onSuccess(
-                missionService.saveCompletedMission(userMissionId, userId)
+                missionCommandService.saveCompletedMission(userMissionId, userId)
         );
     }
 
     // 오늘 미션 새로고침 API
-    @PatchMapping("/today-mission/restart")
+    @PatchMapping("/today-mission/refresh")
     public ApiResponse<MissionResponse> refreshTodayMission(
             @AuthenticationPrincipal Long userId
     ) {
         return ApiResponse.onSuccess(
-                missionService.refreshTodayMission(userId)
+                missionCommandService.refreshTodayMission(userId)
         );
     }
 }

@@ -1,12 +1,14 @@
 package com.symteo.domain.report.service;
 
-import com.symteo.domain.diagnose.entity.Diagnose;
 import com.symteo.domain.diagnose.enums.DiagnoseType;
+import com.symteo.domain.diagnose.repository.DiagnoseRepository;
+import com.symteo.domain.report.constant.ReportsConstant;
 import com.symteo.domain.report.dto.ReportsResponse;
 import com.symteo.domain.report.entity.Reports;
 import com.symteo.domain.report.entity.mapping.AttachmentReports;
 import com.symteo.domain.report.entity.mapping.Strength;
 import com.symteo.domain.report.entity.mapping.StressPoints;
+import com.symteo.domain.report.exception.ReportsErrorCode;
 import com.symteo.domain.report.repository.AttachmentReportsRepository;
 import com.symteo.domain.report.repository.ReportsRepository;
 import com.symteo.domain.report.repository.StressPointsRepository;
@@ -33,30 +35,36 @@ public class AttachmentReportsService {
     private final StrengthRepository strengthRepository;
     private final AiModelService aiModelService;
     private final UserRepository userRepository;
+    private final DiagnoseRepository diagnoseRepository;
 
-    public ReportsResponse.CreateReportResult analyzeAndSave(Diagnose diagnose, Long userId) {
+    public ReportsResponse.CreateReportResult analyzeAndSave(Long diagnoseId, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus._MEMBER_NOT_FOUND));
 
-        // 1. 점수 계산 및 유형 판정
+        com.symteo.domain.diagnose.entity.Diagnose diagnose = diagnoseRepository.findById(diagnoseId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus._DIAGNOSE_NOT_FOUND));
+
+        if (!diagnose.getTestType().equals("ATTACHMENT")) {
+            throw new GeneralException(ErrorStatus._BAD_REQUEST);
+        }
+
+        // 점수 계산 및 유형 판정
         Map<Integer, Double> scores = preprocessAnswers(diagnose.getAnswers());
         double anxietyScore = calculateAverage(scores, List.of(2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 29, 30, 32, 34, 36));
         double avoidanceScore = calculateAverage(scores, List.of(1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 31, 33, 35));
         String type = determineType(anxietyScore, avoidanceScore);
 
-        // 2. DB 고정 문구 조회
         List<StressPoints> stressList = stressPointsRepository.findByAttachmentType(type);
         List<Strength> strengthList = strengthRepository.findByAttachmentType(type);
 
-        // 3. 행동 제언 및 AI 프롬프트 생성 (줄바꿈 제거 지침 포함)
         String actionGuide = getActionGuideSentence(type);
         String prompt = buildAttachmentPrompt(user.getNickname(), type,
                 getScoreLabel(anxietyScore), getScoreLabel(avoidanceScore),
                 stressList.get(0).getStContents(), strengthList.get(0).getStrengthContents(), actionGuide);
 
+        // AI API 호출 (실패 시 예외 전파됨)
         String aiResultText = aiModelService.callAiApi(prompt);
 
-        // 4. 리포트 마스터 및 상세 저장
         Reports report = reportsRepository.save(Reports.builder()
                 .user(user).diagnoseId(diagnose.getId()).rType(DiagnoseType.ATTACHMENT_TEST).build());
 
@@ -76,10 +84,17 @@ public class AttachmentReportsService {
 
     @Transactional(readOnly = true)
     public ReportsResponse.AttachmentReportDetail getReportDetail(Long reportId, Long userId) {
+        // fetch join 활용
         Reports report = reportsRepository.findReportWithDetails(reportId)
-                .orElseThrow(() -> new GeneralException(ErrorStatus._REPORT_NOT_FOUND));
+                .orElseThrow(() -> new GeneralException(ReportsErrorCode._REPORT_NOT_FOUND));
+
+        if (!report.getUser().getId().equals(userId)) {
+            throw new GeneralException(ReportsErrorCode._REPORT_FORBIDDEN);
+        }
 
         AttachmentReports at = report.getAttachmentReport();
+        if (at == null) throw new GeneralException(ReportsErrorCode._REPORT_NOT_FOUND);
+
         return ReportsResponse.AttachmentReportDetail.builder()
                 .reportId(report.getReportId()).userName(report.getUser().getNickname())
                 .attachmentType(at.getAttachmentType())
@@ -113,9 +128,9 @@ public class AttachmentReportsService {
     }
 
     private String determineType(double anxiety, double avoidance) {
-        if (anxiety < 3.0 && avoidance < 3.0) return "안정형";
-        if (anxiety >= 3.0 && avoidance < 3.0) return "불안형";
-        if (anxiety < 3.0 && avoidance >= 3.0) return "거부 회피형";
+        if (anxiety < ReportsConstant.ATTACHMENT_THRESHOLD && avoidance < ReportsConstant.ATTACHMENT_THRESHOLD) return "안정형";
+        if (anxiety >= ReportsConstant.ATTACHMENT_THRESHOLD && avoidance < ReportsConstant.ATTACHMENT_THRESHOLD) return "불안형";
+        if (anxiety < ReportsConstant.ATTACHMENT_THRESHOLD && avoidance >= ReportsConstant.ATTACHMENT_THRESHOLD) return "거부 회피형";
         return "공포 회피형";
     }
 
