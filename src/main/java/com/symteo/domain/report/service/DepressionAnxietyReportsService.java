@@ -3,7 +3,6 @@ package com.symteo.domain.report.service;
 import com.symteo.domain.diagnose.dto.req.DiagnoseReqDTO;
 import com.symteo.domain.diagnose.entity.Diagnose;
 import com.symteo.domain.diagnose.repository.DiagnoseRepository;
-import com.symteo.domain.report.constant.ReportsConstant;
 import com.symteo.domain.report.dto.ReportsResponse;
 import com.symteo.domain.report.entity.DiagnoseAiReports;
 import com.symteo.domain.report.entity.Reports;
@@ -43,6 +42,7 @@ public class DepressionAnxietyReportsService {
         com.symteo.domain.diagnose.entity.Diagnose diagnose = diagnoseRepository.findById(diagnoseId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus._DIAGNOSE_NOT_FOUND));
 
+        // 중복 체크 (diagnoseId 및 rType 기준)
         Optional<Reports> existingReport = reportsRepository.findByDuplicateCheck(
                 user, "DEPRESSION_ANXIETY_COMPLEX", diagnose.getId());
 
@@ -50,12 +50,16 @@ public class DepressionAnxietyReportsService {
             return ReportsResponse.CreateReportResult.builder()
                     .reportId(existingReport.get().getReportId())
                     .testType(existingReport.get().getRType())
-                    .createdAt(existingReport.get().getCreatedAt()).build();
+                    .createdAt(existingReport.get().getCreatedAt())
+                    .build();
         }
 
+        // 리포트 마스터 생성
         Reports report = reportsRepository.save(Reports.builder()
-                .user(user).diagnoseId(diagnose.getId()).rType("DEPRESSION_ANXIETY_COMPLEX").build());
+                .user(user).diagnoseId(diagnose.getId())
+                .rType("DEPRESSION_ANXIETY_COMPLEX").build());
 
+        // 점수 계산 및 개별 도메인 저장
         List<DiagnoseReqDTO.AnswerDTO> answers = diagnose.getAnswers();
         int deTotal = calculateTotalByRange(answers, 1, 9);
         int anTotal = calculateTotalByRange(answers, 10, 16);
@@ -63,7 +67,7 @@ public class DepressionAnxietyReportsService {
         DepressionReports deReport = processDepression(user, report, answers, deTotal);
         AnxietyReports anReport = processAnxiety(user, report, answers, anTotal);
 
-        // AI 통합 분석 (예외 전파)
+        // AI 통합 분석문 생성
         String dePrompt = buildDepressionPrompt(user.getNickname(), deReport, answers);
         String anPrompt = buildAnxietyPrompt(user.getNickname(), anReport, answers);
         String finalAiContents = aiModelService.callAiApi(dePrompt) + "||" + aiModelService.callAiApi(anPrompt);
@@ -77,42 +81,50 @@ public class DepressionAnxietyReportsService {
                 .createdAt(report.getCreatedAt()).build();
     }
 
+    // 우울/불안 리포트 조회
     @Transactional(readOnly = true)
     public ReportsResponse.DepressionAnxietyReportDetail getReportDetail(Long reportId, Long userId) {
+        // fetch join을 활용한 데이터 통합 조회
         Reports report = reportsRepository.findReportWithDetails(reportId)
                 .orElseThrow(() -> new GeneralException(ReportsErrorCode._REPORT_NOT_FOUND));
 
         if (!report.getUser().getId().equals(userId)) {
-            throw new GeneralException(ReportsErrorCode._REPORT_FORBIDDEN);
+            throw new GeneralException(ErrorStatus._UNAUTHORIZED);
         }
 
         DepressionReports de = report.getDepressionReport();
         AnxietyReports an = report.getAnxietyReport();
         DiagnoseAiReports ai = report.getAiReport();
-        if (de == null || an == null) throw new GeneralException(ReportsErrorCode._REPORT_NOT_FOUND);
+        Diagnose diagnose = diagnoseRepository.findById(report.getDiagnoseId()).orElseThrow();
 
-        Diagnose diagnose = diagnoseRepository.findById(report.getDiagnoseId())
-                .orElseThrow(() -> new GeneralException(ErrorStatus._DIAGNOSE_NOT_FOUND));
-
+        // 종합 결과 계산 (A = (S1 + S2) / 2)
         double avg = (de.getDepressionScore() + an.getAnxietyScore()) / 2.0;
+
+        // AI 분석 본문 분리 로직
         String[] aiParts = (ai != null && ai.getAiContents().contains("||"))
                 ? ai.getAiContents().split("\\|\\|") : new String[]{ai != null ? ai.getAiContents() : "", ""};
 
         return ReportsResponse.DepressionAnxietyReportDetail.builder()
-                .reportId(report.getReportId()).testType(report.getRType())
-                .summary(ReportsResponse.OverallSummary.builder().averageScore(avg).statusLabel(calculateOverallLabel(avg)).statusColor(getColorByRatio(avg / 24.0)).build())
-                .phq9(buildPhqSection(de)).gad7(buildGadSection(an))
+                .reportId(report.getReportId())
+                .testType(report.getRType())
+                .summary(ReportsResponse.OverallSummary.builder()
+                        .averageScore(avg)
+                        .statusLabel(calculateOverallLabel(avg))
+                        .statusColor(getColorByRatio(avg / 24.0)).build())
+                .phq9(buildPhqSection(de))
+                .gad7(buildGadSection(an))
                 .aiInsightCards(extractInsightCards(diagnose.getAnswers()))
                 .depressionAiContent(aiParts[0].trim())
                 .anxietyAiContent(aiParts.length > 1 ? aiParts[1].trim() : "")
-                .emergencyFlag(de.getIsSafetyFlow()).createdAt(report.getCreatedAt()).build();
+                .emergencyFlag(de.getIsSafetyFlow())
+                .createdAt(report.getCreatedAt()).build();
     }
 
     // 시각화 데이터 산출 헬퍼 메서드
 
     private String calculateOverallLabel(double avg) {
-        if (avg >= ReportsConstant.PHQ_HIGH_RISK) return "즉시 도움 필요";
-        if (avg >= ReportsConstant.PHQ_MANAGEMENT) return "관리 필요";
+        if (avg >= 20) return "즉시 도움 필요";
+        if (avg >= 15) return "관리 필요";
         if (avg >= 10) return "주의";
         if (avg >= 5) return "양호";
         return "안정";
@@ -156,15 +168,29 @@ public class DepressionAnxietyReportsService {
         List<ReportsResponse.AiInsightCard> cards = new ArrayList<>();
         for (DiagnoseReqDTO.AnswerDTO a : answers) {
             if (a.score() >= 2) {
-                switch (a.questionNo().intValue()) {
-                    case 3 -> cards.add(new ReportsResponse.AiInsightCard("sleep_issue", "수면 장애 심각"));
-                    case 11 -> cards.add(new ReportsResponse.AiInsightCard("worry_issue", "지속적인 걱정"));
-                    case 15 -> cards.add(new ReportsResponse.AiInsightCard("tension_issue", "신체적 긴장"));
-                    case 7 -> cards.add(new ReportsResponse.AiInsightCard("focus_issue", "집중력 저하"));
+                long qNo = a.questionNo();
+
+                // 트리거 태그(subtitle) 생성 로직
+                String triggerTag = (qNo <= 9) ? "(PHQ-9 #" + qNo + ")" : "(GAD-7 #" + (qNo - 9) + ")";
+
+                switch ((int) qNo) {
+                    case 3 -> cards.add(createCard("sleep_issue", "수면 장애 심각", triggerTag));
+                    case 7 -> cards.add(createCard("focus_issue", "집중력 저하", triggerTag));
+                    case 11 -> cards.add(createCard("worry_issue", "지속적인 걱정", triggerTag));
+                    case 15 -> cards.add(createCard("tension_issue", "신체적 긴장", triggerTag));
                 }
             }
         }
         return cards;
+    }
+
+    // 헬퍼 메서드 추가
+    private ReportsResponse.AiInsightCard createCard(String id, String title, String subtitle) {
+        return ReportsResponse.AiInsightCard.builder()
+                .id(id)
+                .title(title)
+                .subtitle(subtitle)
+                .build();
     }
 
     // 수치 계산 및 데이터 저장 헬퍼
