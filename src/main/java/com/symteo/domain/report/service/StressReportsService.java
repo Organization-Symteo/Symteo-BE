@@ -260,4 +260,11 @@ public class StressReportsService {
         if (score >= 14) return "경계";
         return "정상";
     }
+
+    // 오늘의 미션 관련 판단 로직
+    public boolean checkIsLowControl(User user) {
+        return stressReportsRepository.findTopByUserOrderByStReportIdDesc(user)
+                .map(r -> r.getControlPercent() <= 68.0)
+                .orElse(false);
+    }
 }

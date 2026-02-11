@@ -227,4 +227,11 @@ public class DepressionAnxietyReportsService {
             if (score <= 14) return "중등도"; return "고도";
         }
     }
+
+    // 오늘의 미션 관련 판단 로직
+    public boolean checkIsUnstable(User user) {
+        return depressionRepository.findTopByUserOrderByDeReportIdDesc(user)
+                .map(r -> !r.getSeverity().equals("정상"))
+                .orElse(false);
+    }
 }
