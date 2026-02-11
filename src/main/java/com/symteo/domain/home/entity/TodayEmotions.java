@@ -6,6 +6,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -27,6 +28,7 @@ public class TodayEmotions {
     @Column(name = "to_emotion", nullable = false)
     private Integer emotion; // 1: 맑음, 2: 구름, 3: 번개, 4: 비
 
+    @CreationTimestamp
     @Column(name = "te_created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
