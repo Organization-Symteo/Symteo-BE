@@ -1,5 +1,6 @@
 package com.symteo.domain.report.service;
 
+import com.symteo.domain.diagnose.enums.DiagnoseType;
 import com.symteo.domain.diagnose.repository.DiagnoseRepository;
 import com.symteo.domain.report.constant.ReportsConstant;
 import com.symteo.domain.report.dto.ReportsResponse;

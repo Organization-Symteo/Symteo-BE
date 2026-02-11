@@ -31,11 +31,13 @@ public class MissionQueryService {
         UserMissions userMission = userMissionRepository.findTopByUserOrderByUserMissionIdDesc(user)
                 .orElseThrow(() -> new GeneralException(TodayMissionErrorCode._MISSION_NOT_FOUND));
 
+        LocalDateTime endOfToday = LocalDateTime.now().withHour(23).withMinute(59).withSecond(59);
+
         long remainingSeconds = 0;
 
         if (!userMission.isCompleted()) {
             remainingSeconds = Math.max(
-                    Duration.between(LocalDateTime.now(), userMission.getMissions().getDeadLine()).getSeconds(), 0);
+                    Duration.between(LocalDateTime.now(), endOfToday).getSeconds(), 0);
         }
         return MissionResponse.from(userMission, remainingSeconds);
     }

@@ -1,6 +1,7 @@
 package com.symteo.domain.report.service;
 
 import com.symteo.domain.diagnose.dto.req.DiagnoseReqDTO;
+import com.symteo.domain.diagnose.enums.DiagnoseType;
 import com.symteo.domain.diagnose.repository.DiagnoseRepository;
 import com.symteo.domain.report.constant.ReportsConstant;
 import com.symteo.domain.report.dto.ReportsResponse;
@@ -53,7 +54,7 @@ public class StressReportsService {
         }
 
         Reports report = reportsRepository.save(Reports.builder()
-                .user(user).diagnoseId(diagnose.getId()).rType("STRESS_BURNOUT_COMPLEX").build());
+                .user(user).diagnoseId(diagnose.getId()).rType(DiagnoseType.STRESS_BURNOUT_COMPLEX).build());
 
         List<DiagnoseReqDTO.AnswerDTO> answers = diagnose.getAnswers();
         StressReports stReport = processStress(user, report, answers);

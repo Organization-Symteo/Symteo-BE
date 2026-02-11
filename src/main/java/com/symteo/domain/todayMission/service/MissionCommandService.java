@@ -102,7 +102,9 @@ public class MissionCommandService {
         Missions mission = missionRepository.findById(missionId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus._MISSION_NOT_FOUND));
 
-        if (LocalDateTime.now().isAfter(mission.getDeadLine())) {
+        LocalDateTime endOfToday = LocalDateTime.now().withHour(23).withMinute(59).withSecond(59);
+
+        if (LocalDateTime.now().isAfter(endOfToday)) {
             throw new GeneralException(ErrorStatus._MISSION_EXPIRED);
         }
 
@@ -135,7 +137,7 @@ public class MissionCommandService {
                 .userMissionId(userMission.getUserMissionId())
                 .isDrafted(userMission.isDrafted())
                 .isCompleted(userMission.isCompleted())
-                .remainingSeconds(Math.max(Duration.between(LocalDateTime.now(), mission.getDeadLine()).getSeconds(), 0))
+                .remainingSeconds(Math.max(Duration.between(LocalDateTime.now(), endOfToday).getSeconds(), 0))
                 .build();
     }
 
@@ -215,8 +217,9 @@ public class MissionCommandService {
         // 엔티티 업데이트 (is_restarted = true 반영)
         userMission.refresh(newMission);
 
+        LocalDateTime endOfToday = LocalDateTime.now().withHour(23).withMinute(59).withSecond(59);
         long remainingSeconds = Math.max(
-                Duration.between(LocalDateTime.now(), newMission.getDeadLine()).getSeconds(),
+                Duration.between(LocalDateTime.now(), endOfToday).getSeconds(),
                 0
         );
 
