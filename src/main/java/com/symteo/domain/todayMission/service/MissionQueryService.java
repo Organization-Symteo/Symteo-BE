@@ -8,12 +8,10 @@ import com.symteo.domain.user.entity.User;
 import com.symteo.domain.user.repository.UserRepository;
 import com.symteo.global.ApiPayload.exception.GeneralException;
 import com.symteo.global.ApiPayload.status.ErrorStatus;
+import com.symteo.global.util.TimeUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Duration;
-import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -31,14 +29,9 @@ public class MissionQueryService {
         UserMissions userMission = userMissionRepository.findTopByUserOrderByUserMissionIdDesc(user)
                 .orElseThrow(() -> new GeneralException(TodayMissionErrorCode._MISSION_NOT_FOUND));
 
-        LocalDateTime endOfToday = LocalDateTime.now().withHour(23).withMinute(59).withSecond(59);
+        // 완료되지 않았을 때만 남은 시간 계산, 완료되면 0 반환
+        long remainingSeconds = userMission.isCompleted() ? 0 : TimeUtils.getSecondsUntilEndOfDay();
 
-        long remainingSeconds = 0;
-
-        if (!userMission.isCompleted()) {
-            remainingSeconds = Math.max(
-                    Duration.between(LocalDateTime.now(), endOfToday).getSeconds(), 0);
-        }
         return MissionResponse.from(userMission, remainingSeconds);
     }
 }

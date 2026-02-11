@@ -17,14 +17,13 @@ import com.symteo.domain.user.repository.UserRepository;
 import com.symteo.global.ApiPayload.exception.GeneralException;
 import com.symteo.global.ApiPayload.status.ErrorStatus;
 import com.symteo.global.s3.S3Service;
+import com.symteo.global.util.TimeUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -102,12 +101,6 @@ public class MissionCommandService {
         Missions mission = missionRepository.findById(missionId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus._MISSION_NOT_FOUND));
 
-        LocalDateTime endOfToday = LocalDateTime.now().withHour(23).withMinute(59).withSecond(59);
-
-        if (LocalDateTime.now().isAfter(endOfToday)) {
-            throw new GeneralException(ErrorStatus._MISSION_EXPIRED);
-        }
-
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus._MEMBER_NOT_FOUND));
 
@@ -137,7 +130,7 @@ public class MissionCommandService {
                 .userMissionId(userMission.getUserMissionId())
                 .isDrafted(userMission.isDrafted())
                 .isCompleted(userMission.isCompleted())
-                .remainingSeconds(Math.max(Duration.between(LocalDateTime.now(), endOfToday).getSeconds(), 0))
+                .remainingSeconds(TimeUtils.getSecondsUntilEndOfDay())
                 .build();
     }
 
@@ -216,14 +209,7 @@ public class MissionCommandService {
 
         // 엔티티 업데이트 (is_restarted = true 반영)
         userMission.refresh(newMission);
-
-        LocalDateTime endOfToday = LocalDateTime.now().withHour(23).withMinute(59).withSecond(59);
-        long remainingSeconds = Math.max(
-                Duration.between(LocalDateTime.now(), endOfToday).getSeconds(),
-                0
-        );
-
-        return MissionResponse.from(userMission, remainingSeconds);
+        return MissionResponse.from(userMission, TimeUtils.getSecondsUntilEndOfDay());
     }
 
     // 소유권 검증 메소드
