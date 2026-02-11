@@ -17,7 +17,12 @@ public enum CounselErrorCode implements BaseErrorCode {
     _COUNSELOR_ALREADY_EXISTS(HttpStatus.CONFLICT, "COUNSELOR409", "이미 상담사 설정이 존재합니다."),
     _COUNSELOR_NOT_FOUND(HttpStatus.NOT_FOUND, "COUNSELOR404", "상담사 설정을 찾을 수 없습니다."),
     _SETTING_SAVE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "SETTING500", "상담사 설정 저장 요청이 실패했습니다."),
-    _SETTING_NOT_FOUND(HttpStatus.NOT_FOUND, "SETTING404", "해당 사용자의 상담사 초기 설정이 존재하지 않습니다.");
+    _SETTING_NOT_FOUND(HttpStatus.NOT_FOUND, "SETTING404", "해당 사용자의 상담사 초기 설정이 존재하지 않습니다."),
+
+    _REDIS_SETTING_NOT_FOUND(HttpStatus.NOT_FOUND, "SETTING404", "Redis 캐시에서 상담자 설정이 존재하지 않습니다."),
+    _REDIS_SETTING_NOT_SAVED(HttpStatus.INTERNAL_SERVER_ERROR, "REDIS_SETTING500", "Redis 캐시에서 상담사 설정이 저장되지 않았습니다"),
+    _REDIS_CHATMESSAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "CHATMESSAGE404","Redis 캐시에서 채팅이 존재하지 않습니다."),
+    _REDIS_CHATMESSAGE_NOT_SAVED(HttpStatus.INTERNAL_SERVER_ERROR, "REDIS_CHATMESSAGE500", "Redis 캐시에서 채팅이 저장되지 않았습니다");
 
     private final HttpStatus httpStatus;
     private final String code;

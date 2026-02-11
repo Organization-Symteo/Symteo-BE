@@ -1,4 +1,6 @@
 spring:
+  application:
+    name: symteo-api
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
@@ -8,10 +10,10 @@ spring:
   jpa:
     hibernate:
       ddl-auto: none
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
         dialect: org.hibernate.dialect.MySQLDialect
 
   flyway:
@@ -62,9 +64,11 @@ spring:
 # 로그 확인
 logging:
   level:
-    org.springframework.security: DEBUG
-    org.springframework.web: DEBUG
-
+    org.springframework.security: INFO
+    org.springframework.web: INFO
+    org.hibernate.SQL: DEBUG # SQL 확인
+  pattern:
+    console: "%d{HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n" # 로그 패턴(날짜, 레벨, 메시지만)
 
 
 springdoc:
@@ -84,10 +88,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: prometheus, health, metrics
-  endpoint:
-    prometheus:
-      enabled: true
+        include: prometheus, health, info, metrics # info 추가
   metrics:
     tags:
       application: ${spring.application.name}
