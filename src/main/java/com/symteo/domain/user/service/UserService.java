@@ -1,5 +1,5 @@
 package com.symteo.domain.user.service;
-import com.sun.jdi.request.DuplicateRequestException;
+
 import com.symteo.domain.counsel.entity.CounselorSettings;
 import com.symteo.domain.counsel.repository.CounselorSettingRepository;
 import com.symteo.domain.todayMission.entity.mapping.Drafts;
