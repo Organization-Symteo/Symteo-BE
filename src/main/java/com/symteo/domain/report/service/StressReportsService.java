@@ -160,7 +160,7 @@ public class StressReportsService {
 
         // 지난 달 리포트 조회 및 비교
         reportsRepository.findLastReport(
-                st.getUser(), "STRESS_BURNOUT_COMPLEX", st.getReport().getCreatedAt()
+                st.getUser(), DiagnoseType.STRESS_BURNOUT_COMPLEX, st.getReport().getCreatedAt()
         ).ifPresent(prevReport -> {
             stressReportsRepository.findByReport(prevReport).ifPresent(prevSt -> {
                 // 현재 통제감이 지난 리포트의 통제감보다 낮은 경우

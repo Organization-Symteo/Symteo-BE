@@ -6,22 +6,19 @@ import com.symteo.domain.counsel.dto.res.CounselResDTO;
 import com.symteo.domain.counsel.service.CounselCommandService;
 import com.symteo.domain.counsel.service.CounselQueryService;
 import com.symteo.domain.counsel.service.CounselorService;
-
 import com.symteo.global.ApiPayload.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.nio.file.attribute.UserPrincipal;
 
 import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/counsel")
+@RequestMapping("/api/v1/counsels")
 @RequiredArgsConstructor
 public class CounselController {
 
@@ -30,26 +27,35 @@ public class CounselController {
     private final CounselorService counselorService;
 
     // AI 상담 요청 보내기
-    @PostMapping("/request")
+    @PostMapping("")
     public ApiResponse<CounselResDTO.ChatMessage> askAI(
             @AuthenticationPrincipal Long userId,
-            @RequestBody CounselReqDTO.ChatMessage dto
+            @RequestBody @Valid CounselReqDTO.ChatMessage dto
     ){
         return ApiResponse.onSuccess(counselCommandService.askCounsel(userId, dto));
     }
 
+    // 리포트 불러오기
+    @PostMapping("/report")
+    public ApiResponse<CounselResDTO.ChatMessage> askAiReport(
+            @AuthenticationPrincipal Long userId,
+            @RequestBody @Valid CounselReqDTO.ChatReport dto
+    ){
+        return ApiResponse.onSuccess(counselCommandService.askReport(userId, dto));
+    }
+
     // AI 상담 종료하기
-    @PatchMapping("/save")
+    @PatchMapping("{counselId}/summary")
     public ApiResponse<CounselResDTO.ChatSummary> summaryAI(
             @AuthenticationPrincipal Long userId,
-            @RequestBody CounselReqDTO.ChatSummary dto
+            @PathVariable Long counselId
     ){
-        return ApiResponse.onSuccess(counselCommandService.summaryCounsel(userId, dto));
+        return ApiResponse.onSuccess(counselCommandService.summaryCounsel(userId, counselId));
     }
 
     // 전체 상담 조회하기
     // 나중에 Spring JWT에서 토큰 속 id를 찾자
-    @GetMapping("/all")
+    @GetMapping("")
     public ApiResponse<List<CounselResDTO.Chat>> getAllChat(
             @AuthenticationPrincipal Long userId
     ){
@@ -75,12 +81,12 @@ public class CounselController {
     }
 
     // 상담사 초기 설정 저장
-    @PostMapping("/settings")
-    public ResponseEntity<String> saveSettings(@RequestBody CounselorSettingReqDTO request) {
-
-        counselorService.saveSettings(request);
-
-        return ResponseEntity.ok("상담사 초기 설정이 저장되었습니다.");
+    @PutMapping("/setting")
+    public ApiResponse<Long> saveSettings(
+            @AuthenticationPrincipal Long userId,
+            @RequestBody @Valid CounselorSettingReqDTO.CounselorSetting request
+    ) {
+        return ApiResponse.onSuccess(counselorService.saveSettings(userId, request));
     }
 
 }

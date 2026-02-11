@@ -1,10 +1,10 @@
-package com.symteo.global.oauth.service;
+package com.symteo.global.auth.oauth.service;
 
 import com.symteo.domain.user.enums.SocialType;
-import com.symteo.global.oauth.impl.GoogleUserInfo;
-import com.symteo.global.oauth.impl.KakaoUserInfo;
-import com.symteo.global.oauth.impl.NaverUserInfo;
-import com.symteo.global.oauth.info.SocialUserInfo;
+import com.symteo.global.auth.oauth.impl.GoogleUserInfo;
+import com.symteo.global.auth.oauth.impl.KakaoUserInfo;
+import com.symteo.global.auth.oauth.impl.NaverUserInfo;
+import com.symteo.global.auth.oauth.info.SocialUserInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -20,13 +20,13 @@ import java.util.Map;
 public class SocialLoadStrategy {
     private final WebClient webClient = WebClient.create();
 
-    @Value("${oauth.kakao.user-info-uri}")
+    @Value("${spring.oauth.kakao.user-info-uri}")
     private String kakaoUserInfoUri;
 
-    @Value("${oauth.naver.user-info-uri}")
+    @Value("${spring.oauth.naver.user-info-uri}")
     private String naverUserInfoUri;
 
-    @Value("${oauth.google.user-info-uri}")
+    @Value("${spring.oauth.google.user-info-uri}")
     private String googleUserInfoUri;
 
     public SocialUserInfo getSocialInfo(String providerName, String accessToken) {

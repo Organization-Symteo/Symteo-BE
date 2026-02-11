@@ -35,6 +35,8 @@ public class CounselConverter {
                 .userId(chatRoom.getUserId())
                 .chatRoomId(chatRoom.getChatroomId())
                 .chatSummary(chatRoom.getChatSummary())
+                .userSummary(chatRoom.getUserSummary())
+                .aiSummary(chatRoom.getAiSummary())
                 .build();
     }
 

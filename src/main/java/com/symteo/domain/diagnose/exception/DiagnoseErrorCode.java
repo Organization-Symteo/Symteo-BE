@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum DiagnoseErrorCode implements BaseErrorCode {
 
+    _DIAGNOSE_ACCESS_DENIED(HttpStatus.FORBIDDEN, "DIAGNOSE403", "해당 진단에 권한이 없습니다."),
     _DIAGNOSE_NOT_FOUND(HttpStatus.NOT_FOUND, "DIAGNOSE404","해당 분야의 진단이 존재하지 않습니다.");
 
     private final HttpStatus httpStatus;

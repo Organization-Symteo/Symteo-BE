@@ -65,7 +65,7 @@ public class AttachmentReportsService {
         String aiResultText = aiModelService.callAiApi(prompt);
 
         Reports report = reportsRepository.save(Reports.builder()
-                .user(user).diagnoseId(diagnose.getId()).rType("ATTACHMENT_TEST").build());
+                .user(user).diagnoseId(diagnose.getId()).rType(DiagnoseType.ATTACHMENT_TEST).build());
 
         attachmentReportsRepository.save(AttachmentReports.builder()
                 .user(user).report(report)
@@ -77,7 +77,7 @@ public class AttachmentReportsService {
 
         report.complete();
         return ReportsResponse.CreateReportResult.builder()
-                .reportId(report.getReportId()).testType("ATTACHMENT_TEST")
+                .reportId(report.getReportId()).testType(DiagnoseType.ATTACHMENT_TEST)
                 .createdAt(report.getCreatedAt()).build();
     }
 

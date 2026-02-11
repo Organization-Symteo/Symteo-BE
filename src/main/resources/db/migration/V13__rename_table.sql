@@ -1,1 +1,0 @@
---- RENAME TABLE Mission_images TO mission_images;

@@ -1,5 +1,7 @@
 package com.symteo.domain.diagnose.service;
 
+import com.symteo.domain.counsel.exception.code.CounselErrorCode;
+import com.symteo.domain.counsel.exception.code.CounselException;
 import com.symteo.domain.diagnose.converter.DiagnoseConverter;
 import com.symteo.domain.diagnose.dto.res.DiagnoseResDTO;
 import com.symteo.domain.diagnose.entity.Diagnose;
@@ -10,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -33,11 +36,14 @@ public class DiagnoseQueryServiceImpl implements DiagnoseQueryService{
 
     // 진단 단일 조회
     @Override
-    public DiagnoseResDTO.ResultDTO getDiagnose(Long testId) {
+    public DiagnoseResDTO.ResultDTO getDiagnose(Long userId, Long testId) {
 
         Diagnose diagnose = diagnoseRepository.findById(testId)
                 .orElseThrow(() -> new DiagnoseException(DiagnoseErrorCode._DIAGNOSE_NOT_FOUND));
 
+        if(!Objects.equals(diagnose.getUserId(), userId)){ // null 안전 eqauls
+            throw new DiagnoseException(DiagnoseErrorCode._DIAGNOSE_ACCESS_DENIED);
+        }
 
         return DiagnoseConverter.toResultDTO(diagnose);
     }

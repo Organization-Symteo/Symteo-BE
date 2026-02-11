@@ -9,10 +9,11 @@ public class DiagnoseConverter {
     // DTO -> Entity
     // DTO를 Diagnose 엔티티로 변경
     public static Diagnose toDiagnose(
+            Long userId,
             DiagnoseReqDTO.DiagnoseDTO dto
     ){
         return Diagnose.builder()
-                .userId(dto.userId())
+                .userId(userId)
                 .testType(dto.testType())
                 .answers(dto.answers())
                 .build();

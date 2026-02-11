@@ -1,7 +1,7 @@
-package com.symteo.global.oauth.impl;
+package com.symteo.global.auth.oauth.impl;
 
 import com.symteo.domain.user.enums.SocialType;
-import com.symteo.global.oauth.info.SocialUserInfo;
+import com.symteo.global.auth.oauth.info.SocialUserInfo;
 
 import java.util.Map;
 

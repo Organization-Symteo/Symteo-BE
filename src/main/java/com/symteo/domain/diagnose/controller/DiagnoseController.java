@@ -6,30 +6,32 @@ import com.symteo.domain.diagnose.service.DiagnoseCommandService;
 import com.symteo.domain.diagnose.service.DiagnoseQueryService;
 import com.symteo.global.ApiPayload.ApiResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/diagnose")
+@RequestMapping("/api/v1/diagnoses")
 public class DiagnoseController {
 
     private final DiagnoseCommandService diagnoseCommandService;
     private final DiagnoseQueryService diagnoseQueryService;
 
     // 검사 생성하기
-    @PostMapping("/upload")
+    @PostMapping("")
     public ApiResponse<DiagnoseResDTO.CreateDTO> askDiagnose(
+            @AuthenticationPrincipal Long userId,
             @RequestBody DiagnoseReqDTO.DiagnoseDTO answers
     ){
-        return ApiResponse.onSuccess(diagnoseCommandService.createDiagnose(answers));
+        return ApiResponse.onSuccess(diagnoseCommandService.createDiagnose(userId, answers));
     }
 
     // 전체 검사 조회하기
-    @GetMapping("/all")
+    @GetMapping("")
     public ApiResponse<List<DiagnoseResDTO.ResultDTO>> getAllDiagnose(
-            @RequestParam Long userId
+            @AuthenticationPrincipal Long userId
     ){
         return ApiResponse.onSuccess(diagnoseQueryService.getAllDiagnose(userId));
     }
@@ -54,18 +56,20 @@ public class DiagnoseController {
      * */
 
     // 단일 검사 조회하기
-    @GetMapping("/{testId}")
+    @GetMapping("/{diagnoseId}")
     public ApiResponse<DiagnoseResDTO.ResultDTO> getDiagnose(
-            @PathVariable Long testId
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long diagnoseId
     ){
-        return ApiResponse.onSuccess(diagnoseQueryService.getDiagnose(testId));
+        return ApiResponse.onSuccess(diagnoseQueryService.getDiagnose(userId, diagnoseId));
     }
 
     // 검사 삭제하기
-    @DeleteMapping("/{testId}")
+    @DeleteMapping("/{diagnoseId}")
     public ApiResponse<DiagnoseResDTO.DeleteDTO> deleteDiagnose(
-            @PathVariable Long testId
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long diagnoseId
     ){
-        return ApiResponse.onSuccess(diagnoseCommandService.deleteDiagnose(testId));
+        return ApiResponse.onSuccess(diagnoseCommandService.deleteDiagnose(userId, diagnoseId));
     }
 }

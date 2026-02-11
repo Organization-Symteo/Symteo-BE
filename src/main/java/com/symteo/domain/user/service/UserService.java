@@ -1,6 +1,8 @@
 package com.symteo.domain.user.service;
 import com.sun.jdi.request.DuplicateRequestException;
 import com.symteo.domain.counsel.entity.CounselorSettings;
+import com.symteo.domain.counsel.exception.code.CounselErrorCode;
+import com.symteo.domain.counsel.exception.code.CounselException;
 import com.symteo.domain.counsel.repository.CounselorSettingRepository;
 import com.symteo.domain.todayMission.entity.mapping.Drafts;
 import com.symteo.domain.todayMission.entity.mapping.MissionImages;
@@ -206,7 +208,7 @@ public class UserService {
                 .orElseThrow(() -> new GeneralException(ErrorStatus._MEMBER_NOT_FOUND));
 
         CounselorSettings settings = counselorSettingRepository.findById(userId)
-                .orElseThrow(() -> new GeneralException(ErrorStatus.COUNSELOR_NOT_FOUND));
+                .orElseThrow(() -> new CounselException(CounselErrorCode._COUNSELOR_NOT_FOUND));
 
         return CounselorSettingsResponse.of(
                 settings.getAtmosphere(),
@@ -223,7 +225,7 @@ public class UserService {
                 .orElseThrow(() -> new GeneralException(ErrorStatus._MEMBER_NOT_FOUND));
 
         CounselorSettings settings = counselorSettingRepository.findById(userId)
-                .orElseThrow(() -> new GeneralException(ErrorStatus.COUNSELOR_NOT_FOUND));
+                .orElseThrow(() -> new CounselException(CounselErrorCode._COUNSELOR_NOT_FOUND));
 
         // 엔티티에 업데이트 메서드x -> 새로 생성해서 저장하기...
         CounselorSettings updatedSettings = CounselorSettings.builder()
@@ -320,13 +322,11 @@ public class UserService {
             draft.updateContents(request.getContents());
         }
 
-        // 이미지 수정 (이미지삭제하고 새이미지 넣기)
+        // 2. 이미지 수정
         if (images != null && !images.isEmpty()) {
-            // 기존 이미지 삭제
             List<MissionImages> existingImages = missionImageRepository.findByUserMissions(userMission);
             missionImageRepository.deleteAll(existingImages);
 
-            // 새이미지 업로드,저장
             for (MultipartFile image : images) {
                 if (!image.isEmpty()) {
                     String imageUrl = s3Service.upload(image, "missions");

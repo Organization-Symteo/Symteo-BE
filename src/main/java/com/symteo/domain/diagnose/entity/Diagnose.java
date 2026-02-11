@@ -1,6 +1,7 @@
 package com.symteo.domain.diagnose.entity;
 
 import com.symteo.domain.diagnose.dto.req.DiagnoseReqDTO;
+import com.symteo.domain.diagnose.enums.DiagnoseType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -27,7 +28,8 @@ public class Diagnose {
     private Long userId;
 
     @Column(name = "test_type")
-    private String testType; // 검사 유형
+    @Enumerated(EnumType.STRING)
+    private DiagnoseType testType; // 검사 유형
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "json")

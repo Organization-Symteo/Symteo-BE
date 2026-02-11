@@ -37,11 +37,13 @@ public class SecurityConfig {
                         // (1) Swagger 및 인증 관련 API는 모두 허용
                         .requestMatchers(
                                 "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html",
-                                "/api/v1/auth/**", "/error", "/favicon.ico"
+                                "/api/v1/auth/**", "/error", "/favicon.ico", "/actuator/health", "/actuator/prometheus"
                         ).permitAll()
 
-                        // DevAuthController 관련 내용이므로 이후 삭제 에정(개발용 로그인 경로는 프리패스 허용)
-                        .requestMatchers("/api/v1/dev/**").permitAll()
+                        .requestMatchers(
+                                //카카오, 구글, 네이버 OAuth2 리다이렉트(콜백) 주소 허용
+                                "/login/oauth2/code/**"
+                        ).permitAll()
 
                         // (2) 그 외 모든 요청은 인증 필요
                         .anyRequest().authenticated()
@@ -53,10 +55,5 @@ public class SecurityConfig {
         return http.build();
     }
 
-
-    //@Bean
-    //public BCryptPasswordEncoder bCryptPasswordEncoder(){
-    //   return new BCryptPasswordEncoder();
-    //}
 }
 

@@ -1,5 +1,6 @@
 package com.symteo.domain.report.repository;
 
+import com.symteo.domain.diagnose.enums.DiagnoseType;
 import com.symteo.domain.report.entity.Reports;
 import com.symteo.domain.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -26,7 +27,7 @@ public interface ReportsRepository extends JpaRepository<Reports, Long> {
             "AND r.diagnoseId = :diagnoseId")
     Optional<Reports> findByDuplicateCheck(
             @Param("user") User user,
-            @Param("rType") String rType,
+            @Param("rType") DiagnoseType rType,
             @Param("diagnoseId") Long diagnoseId
     );
 
@@ -34,7 +35,7 @@ public interface ReportsRepository extends JpaRepository<Reports, Long> {
     @Query("SELECT r FROM Reports r WHERE r.user = :user AND r.rType = :rType AND r.createdAt < :createdAt ORDER BY r.createdAt DESC LIMIT 1")
     Optional<Reports> findLastReport(
             @Param("user") User user,
-            @Param("rType") String rType,
+            @Param("rType") DiagnoseType rType,
             @Param("createdAt") LocalDateTime createdAt
     );
 }
