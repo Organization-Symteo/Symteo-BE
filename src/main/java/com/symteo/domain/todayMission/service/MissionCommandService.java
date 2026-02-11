@@ -229,14 +229,4 @@ public class MissionCommandService {
             throw new GeneralException(TodayMissionErrorCode._MISSION_FORBIDDEN);
         }
     }
-
-    // 테스트용 로직
-    @Transactional
-    public void generateMissionForUserByUserId(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new GeneralException(ErrorStatus._MEMBER_NOT_FOUND));
-
-        // 기존에 만드신 맞춤 할당 로직 호출
-        this.generateMissionForUser(user);
-    }
 }
