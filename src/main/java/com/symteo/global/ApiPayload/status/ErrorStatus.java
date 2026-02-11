@@ -50,8 +50,7 @@ public enum ErrorStatus implements BaseErrorCode {
     _TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "USER404", "토큰을 찾을 수 없습니다."),
 
     // 진단 오류
-    _DIAGNOSE_NOT_FOUND(HttpStatus.NOT_FOUND, "DIAGNOSE404", "검사 결과가 없습니다."),
-    _REPORT_NOT_FOUND(HttpStatus.NOT_FOUND, "REPORTS404", "리포트가 존재하지 않습니다.");
+    _DIAGNOSE_NOT_FOUND(HttpStatus.NOT_FOUND, "DIAGNOSE404", "검사 결과가 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

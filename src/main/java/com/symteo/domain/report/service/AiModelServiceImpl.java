@@ -1,5 +1,7 @@
 package com.symteo.domain.report.service;
 
+import com.symteo.domain.report.exception.ReportsErrorCode;
+import com.symteo.global.ApiPayload.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -19,7 +21,7 @@ public class AiModelServiceImpl implements AiModelService {
 
     private final RestTemplate restTemplate;
 
-    @Value("${openai.api.key}") // application.yml에 등록된 키를 읽어옵니다.
+    @Value("${openai.api.key}")
     private String apiKey;
 
     @Value("${openai.api.url:https://api.openai.com/v1/chat/completions}")
@@ -33,9 +35,9 @@ public class AiModelServiceImpl implements AiModelService {
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.setBearerAuth(apiKey);
 
-            // 요청 바디 구성 (GPT-4o 또는 gpt-3.5-turbo 사용)
+            // 요청 바디 구성
             Map<String, Object> body = new HashMap<>();
-            body.put("model", "gpt-4o"); // 혹은 gpt-3.5-turbo
+            body.put("model", "gpt-4o");
 
             List<Map<String, String>> messages = new ArrayList<>();
             messages.add(Map.of("role", "user", "content", prompt));
@@ -54,11 +56,13 @@ public class AiModelServiceImpl implements AiModelService {
                 return (String) message.get("content");
             }
 
-            return "AI 응답을 파싱하는 데 실패했습니다.";
+            // 파싱 실패 시 예외 던짐 (피드백 반영)
+            throw new GeneralException(ReportsErrorCode._AI_ANALYSIS_FAILED);
 
         } catch (Exception e) {
+            // 에러 문자열을 반환하지 않고 예외를 전파하여 상위 서비스에서 리포트 생성을 중단하게 함
             System.err.println("OpenAI API 호출 에러: " + e.getMessage());
-            return "AI 분석 도중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+            throw new GeneralException(ReportsErrorCode._AI_ANALYSIS_FAILED);
         }
     }
 }

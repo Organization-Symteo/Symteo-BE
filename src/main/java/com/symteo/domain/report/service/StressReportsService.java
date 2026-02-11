@@ -1,12 +1,14 @@
 package com.symteo.domain.report.service;
 
 import com.symteo.domain.diagnose.dto.req.DiagnoseReqDTO;
-import com.symteo.domain.diagnose.entity.Diagnose;
+import com.symteo.domain.diagnose.repository.DiagnoseRepository;
+import com.symteo.domain.report.constant.ReportsConstant;
 import com.symteo.domain.report.dto.ReportsResponse;
 import com.symteo.domain.report.entity.DiagnoseAiReports;
 import com.symteo.domain.report.entity.Reports;
 import com.symteo.domain.report.entity.mapping.BurnoutReports;
 import com.symteo.domain.report.entity.mapping.StressReports;
+import com.symteo.domain.report.exception.ReportsErrorCode;
 import com.symteo.domain.report.repository.*;
 import com.symteo.domain.user.entity.User;
 import com.symteo.domain.user.repository.UserRepository;
@@ -30,13 +32,16 @@ public class StressReportsService {
     private final BurnoutReportsRepository burnoutReportsRepository;
     private final AiReportsRepository aiReportsRepository;
     private final AiModelService aiModelService;
+    private final DiagnoseRepository diagnoseRepository;
 
     // 스트레스/번아웃 리포트 생성 api
-    public ReportsResponse.CreateReportResult analyzeAndSave(Diagnose diagnose, Long userId) {
+    public ReportsResponse.CreateReportResult analyzeAndSave(Long diagnoseId, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus._MEMBER_NOT_FOUND));
 
-        // 중복 체크
+        com.symteo.domain.diagnose.entity.Diagnose diagnose = diagnoseRepository.findById(diagnoseId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus._DIAGNOSE_NOT_FOUND));
+
         Optional<Reports> existingReport = reportsRepository.findByDuplicateCheck(
                 user, diagnose.getTestType(), diagnose.getId());
 
@@ -44,84 +49,54 @@ public class StressReportsService {
             return ReportsResponse.CreateReportResult.builder()
                     .reportId(existingReport.get().getReportId())
                     .testType(existingReport.get().getRType())
-                    .createdAt(existingReport.get().getCreatedAt())
-                    .build();
+                    .createdAt(existingReport.get().getCreatedAt()).build();
         }
 
-        Reports report = Reports.builder()
-                .user(user)
-                .diagnoseId(diagnose.getId())
-                .rType("STRESS_BURNOUT_COMPLEX")
-                .build();
-        reportsRepository.save(report);
+        Reports report = reportsRepository.save(Reports.builder()
+                .user(user).diagnoseId(diagnose.getId()).rType("STRESS_BURNOUT_COMPLEX").build());
 
         List<DiagnoseReqDTO.AnswerDTO> answers = diagnose.getAnswers();
-
-        // 개별 도메인 데이터 계산 및 저장
         StressReports stReport = processStress(user, report, answers);
         BurnoutReports buReport = processBurnout(user, report, answers);
 
-        // 통합 지표 산출 (마음배터리 및 AI 인사이트)
         int batteryScore = calculateHeartBattery(stReport.getStressScore(), buReport.getTotalBurnoutScore());
         List<String> insights = generateDetailedInsights(stReport, buReport);
 
-        // AI 통합 프롬프트 생성 (마음배터리와 인사이트 리스트 포함)
         String prompt = buildStressBurnoutPrompt(user.getNickname(), stReport, buReport, insights, batteryScore);
         String aiResponse = aiModelService.callAiApi(prompt);
 
-        // AI 리포트 저장
-        aiReportsRepository.save(DiagnoseAiReports.builder()
-                .user(user)
-                .report(report)
-                .aiContents(aiResponse)
-                .build());
-
+        aiReportsRepository.save(DiagnoseAiReports.builder().user(user).report(report).aiContents(aiResponse).build());
         report.complete();
+
         return ReportsResponse.CreateReportResult.builder()
-                .reportId(report.getReportId())
-                .testType(report.getRType())
-                .createdAt(report.getCreatedAt())
-                .build();
+                .reportId(report.getReportId()).testType(report.getRType()).createdAt(report.getCreatedAt()).build();
     }
 
-    // 스트레스/번아웃 리포트 조회 api
     @Transactional(readOnly = true)
     public ReportsResponse.IntegratedReportDetail getReportDetail(Long reportId, Long userId) {
         Reports report = reportsRepository.findById(reportId)
-                .orElseThrow(() -> new GeneralException(ErrorStatus._REPORT_NOT_FOUND));
+                .orElseThrow(() -> new GeneralException(ReportsErrorCode._REPORT_NOT_FOUND));
 
         if (!report.getUser().getId().equals(userId)) {
-            throw new GeneralException(ErrorStatus._UNAUTHORIZED);
+            throw new GeneralException(ReportsErrorCode._REPORT_FORBIDDEN);
         }
 
-        StressReports st = stressReportsRepository.findByReport(report).orElse(null);
-        BurnoutReports bu = burnoutReportsRepository.findByReport(report).orElse(null);
+        StressReports st = stressReportsRepository.findByReport(report)
+                .orElseThrow(() -> new GeneralException(ReportsErrorCode._REPORT_NOT_FOUND));
+        BurnoutReports bu = burnoutReportsRepository.findByReport(report)
+                .orElseThrow(() -> new GeneralException(ReportsErrorCode._REPORT_NOT_FOUND));
         DiagnoseAiReports ai = aiReportsRepository.findByReport(report).orElse(null);
 
-        int battery = (st != null && bu != null) ? calculateHeartBattery(st.getStressScore(), bu.getTotalBurnoutScore()) : 0;
+        int battery = calculateHeartBattery(st.getStressScore(), bu.getTotalBurnoutScore());
 
         return ReportsResponse.IntegratedReportDetail.builder()
-                .reportId(report.getReportId())
-                .testType(report.getRType())
-                .batteryPercent(battery)
-                .batteryColor(getBatteryColor(battery))
-                .batteryGuide(getBatteryGuide(battery))
-                .stress(ReportsResponse.StressDetail.builder()
-                        .pssScore(st.getStressScore())
-                        .stressLevel(st.getStressLevel())
-                        .controlLevel(st.getControlLevel())
-                        .overloadLevel(st.getOverloadLevel())
-                        .build())
-                .burnout(ReportsResponse.BurnoutDetail.builder()
-                        .exhaustionLevel(bu.getExhaustionLevel())
-                        .cynicismLevel(bu.getCynicismLevel())
-                        .inefficacyLevel(bu.getInefficacyLevel())
-                        .totalLevel(bu.getTotalBurnoutLevel())
-                        .build())
+                .reportId(report.getReportId()).testType(report.getRType())
+                .batteryPercent(battery).batteryColor(getBatteryColor(battery)).batteryGuide(getBatteryGuide(battery))
+                .stress(ReportsResponse.StressDetail.builder().pssScore(st.getStressScore()).stressLevel(st.getStressLevel()).controlLevel(st.getControlLevel()).overloadLevel(st.getOverloadLevel()).build())
+                .burnout(ReportsResponse.BurnoutDetail.builder().exhaustionLevel(bu.getExhaustionLevel()).cynicismLevel(bu.getCynicismLevel()).inefficacyLevel(bu.getInefficacyLevel()).totalLevel(bu.getTotalBurnoutLevel()).build())
                 .aiInsights(generateDetailedInsights(st, bu))
                 .aiFullContent(ai != null ? ai.getAiContents() : "")
-                .createdAt(report.getCreatedAt())
-                .build();
+                .createdAt(report.getCreatedAt()).build();
     }
 
     // 수치 계산 로직
@@ -252,12 +227,11 @@ public class StressReportsService {
         double battery = 100 - (((s + b) / 150.0) * 100);
         return (int) Math.round(Math.max(0, battery));
     }
-
     private String getBatteryColor(int b) {
-        if (b <= 25) return "#F4574F";
-        if (b <= 50) return "#FFAC79";
-        if (b <= 75) return "#FAD000";
-        return "#63B19B";
+        if (b <= 25) return ReportsConstant.COLOR_DANGER;
+        if (b <= 50) return ReportsConstant.COLOR_WARNING;
+        if (b <= 75) return ReportsConstant.COLOR_CAUTION;
+        return ReportsConstant.COLOR_SAFE;
     }
 
     private String getBatteryGuide(int b) {
@@ -281,7 +255,7 @@ public class StressReportsService {
     }
 
     private String calculateStressLevel(int score) {
-        if (score >= 19) return "매우 위험";
+        if (score >= ReportsConstant.STRESS_VERY_DANGEROUS) return "매우 위험";
         if (score >= 17) return "위험";
         if (score >= 14) return "경계";
         return "정상";

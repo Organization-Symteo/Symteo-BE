@@ -3,11 +3,13 @@ package com.symteo.domain.report.service;
 import com.symteo.domain.diagnose.dto.req.DiagnoseReqDTO;
 import com.symteo.domain.diagnose.entity.Diagnose;
 import com.symteo.domain.diagnose.repository.DiagnoseRepository;
+import com.symteo.domain.report.constant.ReportsConstant;
 import com.symteo.domain.report.dto.ReportsResponse;
 import com.symteo.domain.report.entity.DiagnoseAiReports;
 import com.symteo.domain.report.entity.Reports;
 import com.symteo.domain.report.entity.mapping.AnxietyReports;
 import com.symteo.domain.report.entity.mapping.DepressionReports;
+import com.symteo.domain.report.exception.ReportsErrorCode;
 import com.symteo.domain.report.repository.*;
 import com.symteo.domain.user.entity.User;
 import com.symteo.domain.user.repository.UserRepository;
@@ -34,11 +36,13 @@ public class DepressionAnxietyReportsService {
     private final DiagnoseRepository diagnoseRepository;
 
     // 우울/불안 리포트 생성 api
-    public ReportsResponse.CreateReportResult analyzeAndSave(Diagnose diagnose, Long userId) {
+    public ReportsResponse.CreateReportResult analyzeAndSave(Long diagnoseId, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus._MEMBER_NOT_FOUND));
 
-        // 중복 체크 (diagnoseId 및 rType 기준)
+        com.symteo.domain.diagnose.entity.Diagnose diagnose = diagnoseRepository.findById(diagnoseId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus._DIAGNOSE_NOT_FOUND));
+
         Optional<Reports> existingReport = reportsRepository.findByDuplicateCheck(
                 user, "DEPRESSION_ANXIETY_COMPLEX", diagnose.getId());
 
@@ -46,16 +50,12 @@ public class DepressionAnxietyReportsService {
             return ReportsResponse.CreateReportResult.builder()
                     .reportId(existingReport.get().getReportId())
                     .testType(existingReport.get().getRType())
-                    .createdAt(existingReport.get().getCreatedAt())
-                    .build();
+                    .createdAt(existingReport.get().getCreatedAt()).build();
         }
 
-        // 리포트 마스터 생성
         Reports report = reportsRepository.save(Reports.builder()
-                .user(user).diagnoseId(diagnose.getId())
-                .rType("DEPRESSION_ANXIETY_COMPLEX").build());
+                .user(user).diagnoseId(diagnose.getId()).rType("DEPRESSION_ANXIETY_COMPLEX").build());
 
-        // 점수 계산 및 개별 도메인 저장
         List<DiagnoseReqDTO.AnswerDTO> answers = diagnose.getAnswers();
         int deTotal = calculateTotalByRange(answers, 1, 9);
         int anTotal = calculateTotalByRange(answers, 10, 16);
@@ -63,7 +63,7 @@ public class DepressionAnxietyReportsService {
         DepressionReports deReport = processDepression(user, report, answers, deTotal);
         AnxietyReports anReport = processAnxiety(user, report, answers, anTotal);
 
-        // AI 통합 분석문 생성
+        // AI 통합 분석 (예외 전파)
         String dePrompt = buildDepressionPrompt(user.getNickname(), deReport, answers);
         String anPrompt = buildAnxietyPrompt(user.getNickname(), anReport, answers);
         String finalAiContents = aiModelService.callAiApi(dePrompt) + "||" + aiModelService.callAiApi(anPrompt);
@@ -77,50 +77,42 @@ public class DepressionAnxietyReportsService {
                 .createdAt(report.getCreatedAt()).build();
     }
 
-    // 우울/불안 리포트 조회
     @Transactional(readOnly = true)
     public ReportsResponse.DepressionAnxietyReportDetail getReportDetail(Long reportId, Long userId) {
-        // fetch join을 활용한 데이터 통합 조회
         Reports report = reportsRepository.findReportWithDetails(reportId)
-                .orElseThrow(() -> new GeneralException(ErrorStatus._REPORT_NOT_FOUND));
+                .orElseThrow(() -> new GeneralException(ReportsErrorCode._REPORT_NOT_FOUND));
 
         if (!report.getUser().getId().equals(userId)) {
-            throw new GeneralException(ErrorStatus._UNAUTHORIZED);
+            throw new GeneralException(ReportsErrorCode._REPORT_FORBIDDEN);
         }
 
         DepressionReports de = report.getDepressionReport();
         AnxietyReports an = report.getAnxietyReport();
         DiagnoseAiReports ai = report.getAiReport();
-        Diagnose diagnose = diagnoseRepository.findById(report.getDiagnoseId()).orElseThrow();
+        if (de == null || an == null) throw new GeneralException(ReportsErrorCode._REPORT_NOT_FOUND);
 
-        // 종합 결과 계산 (A = (S1 + S2) / 2)
+        Diagnose diagnose = diagnoseRepository.findById(report.getDiagnoseId())
+                .orElseThrow(() -> new GeneralException(ErrorStatus._DIAGNOSE_NOT_FOUND));
+
         double avg = (de.getDepressionScore() + an.getAnxietyScore()) / 2.0;
-
-        // AI 분석 본문 분리 로직
         String[] aiParts = (ai != null && ai.getAiContents().contains("||"))
                 ? ai.getAiContents().split("\\|\\|") : new String[]{ai != null ? ai.getAiContents() : "", ""};
 
         return ReportsResponse.DepressionAnxietyReportDetail.builder()
-                .reportId(report.getReportId())
-                .testType(report.getRType())
-                .summary(ReportsResponse.OverallSummary.builder()
-                        .averageScore(avg)
-                        .statusLabel(calculateOverallLabel(avg))
-                        .statusColor(getColorByRatio(avg / 24.0)).build())
-                .phq9(buildPhqSection(de))
-                .gad7(buildGadSection(an))
+                .reportId(report.getReportId()).testType(report.getRType())
+                .summary(ReportsResponse.OverallSummary.builder().averageScore(avg).statusLabel(calculateOverallLabel(avg)).statusColor(getColorByRatio(avg / 24.0)).build())
+                .phq9(buildPhqSection(de)).gad7(buildGadSection(an))
                 .aiInsightCards(extractInsightCards(diagnose.getAnswers()))
                 .depressionAiContent(aiParts[0].trim())
                 .anxietyAiContent(aiParts.length > 1 ? aiParts[1].trim() : "")
-                .emergencyFlag(de.getIsSafetyFlow())
-                .createdAt(report.getCreatedAt()).build();
+                .emergencyFlag(de.getIsSafetyFlow()).createdAt(report.getCreatedAt()).build();
     }
 
     // 시각화 데이터 산출 헬퍼 메서드
 
     private String calculateOverallLabel(double avg) {
-        if (avg >= 20) return "즉시 도움 필요";
-        if (avg >= 15) return "관리 필요";
+        if (avg >= ReportsConstant.PHQ_HIGH_RISK) return "즉시 도움 필요";
+        if (avg >= ReportsConstant.PHQ_MANAGEMENT) return "관리 필요";
         if (avg >= 10) return "주의";
         if (avg >= 5) return "양호";
         return "안정";

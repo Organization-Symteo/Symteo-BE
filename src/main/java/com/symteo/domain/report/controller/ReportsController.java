@@ -1,14 +1,10 @@
 package com.symteo.domain.report.controller;
 
-import com.symteo.domain.diagnose.entity.Diagnose;
-import com.symteo.domain.diagnose.repository.DiagnoseRepository;
 import com.symteo.domain.report.dto.ReportsResponse;
 import com.symteo.domain.report.service.AttachmentReportsService;
 import com.symteo.domain.report.service.DepressionAnxietyReportsService;
 import com.symteo.domain.report.service.StressReportsService;
 import com.symteo.global.ApiPayload.ApiResponse;
-import com.symteo.global.ApiPayload.exception.GeneralException;
-import com.symteo.global.ApiPayload.status.ErrorStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -19,20 +15,16 @@ import org.springframework.web.bind.annotation.*;
 public class ReportsController {
 
     private final DepressionAnxietyReportsService depressionAnxietyReportsService;
-    private final DiagnoseRepository diagnoseRepository;
     private final StressReportsService stressReportsService;
     private final AttachmentReportsService attachmentReportsService;
 
     // 우울/불안 리포트 생성
-    @PostMapping("/depression-anxiety/{diagnoseId}")
+    @PostMapping("/diagnose/{diagnoseId}/depression-anxiety")
     public ApiResponse<ReportsResponse.CreateReportResult> createReport(
             @PathVariable Long diagnoseId,
             @AuthenticationPrincipal Long userId
     ) {
-        Diagnose diagnose = diagnoseRepository.findById(diagnoseId)
-                .orElseThrow(() -> new GeneralException(ErrorStatus._DIAGNOSE_NOT_FOUND));
-
-        return ApiResponse.onSuccess(depressionAnxietyReportsService.analyzeAndSave(diagnose, userId));
+        return ApiResponse.onSuccess(depressionAnxietyReportsService.analyzeAndSave(diagnoseId, userId));
     }
 
     // 우울/불안 리포트 조회
@@ -45,15 +37,12 @@ public class ReportsController {
     }
 
     // 스트레스/번아웃 리포트 생성
-    @PostMapping("/stress-burnout/{diagnoseId}")
+    @PostMapping("/diagnose/{diagnoseId}/stress-burnout")
     public ApiResponse<ReportsResponse.CreateReportResult> createStressBurnout(
             @PathVariable Long diagnoseId,
             @AuthenticationPrincipal Long userId
     ) {
-        Diagnose diagnose = diagnoseRepository.findById(diagnoseId)
-                .orElseThrow(() -> new GeneralException(ErrorStatus._DIAGNOSE_NOT_FOUND));
-
-        return ApiResponse.onSuccess(stressReportsService.analyzeAndSave(diagnose, userId));
+        return ApiResponse.onSuccess(stressReportsService.analyzeAndSave(diagnoseId, userId));
     }
 
     // 스트레스/번아웃 리포트 조회
@@ -66,15 +55,12 @@ public class ReportsController {
     }
 
     // 성향 리포트 생성
-    @PostMapping("/attachment/{diagnoseId}")
+    @PostMapping("/diagnose/{diagnoseId}/attachment")
     public ApiResponse<ReportsResponse.CreateReportResult> createAttachment(
             @PathVariable Long diagnoseId,
             @AuthenticationPrincipal Long userId
     ) {
-        Diagnose diagnose = diagnoseRepository.findById(diagnoseId)
-                .orElseThrow(() -> new GeneralException(ErrorStatus._DIAGNOSE_NOT_FOUND));
-
-        return ApiResponse.onSuccess(attachmentReportsService.analyzeAndSave(diagnose, userId));
+        return ApiResponse.onSuccess(attachmentReportsService.analyzeAndSave(diagnoseId, userId));
     }
 
     // 성향 리포트 조회
