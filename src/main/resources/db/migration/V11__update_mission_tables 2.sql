@@ -1,0 +1,3 @@
+ALTER TABLE `missions` ADD COLUMN `category` VARCHAR(20) NOT NULL;
+ALTER TABLE `missions` ADD COLUMN `sub_category` VARCHAR(50);
+ALTER TABLE `missions` MODIFY COLUMN `dead_line` DATETIME DEFAULT '9999-12-31 23:59:59';
