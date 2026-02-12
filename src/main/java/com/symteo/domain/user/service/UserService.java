@@ -16,8 +16,6 @@ import com.symteo.domain.user.dto.*;
 import com.symteo.domain.user.entity.User;
 import com.symteo.domain.user.entity.UserSettings;
 import com.symteo.domain.user.entity.UserTokens;
-import com.symteo.domain.user.exception.UserErrorCode;
-import com.symteo.domain.user.exception.UserException;
 import com.symteo.domain.user.repository.UserRepository;
 import com.symteo.domain.user.repository.UserSettingsRepository;
 
@@ -60,12 +58,12 @@ public class UserService {
     public boolean checkNicknameDuplication(String nickname) {
         // 1. 빈 값 체크(사용자가 값을 입력을 하지 않은 경우)
         if (nickname == null || nickname.trim().isEmpty()) {
-            throw new UserException(UserErrorCode._NICKNAME_EMPTY);
+            throw new GeneralException(ErrorStatus._NICKNAME_EMPTY);
         }
 
         // 2. 유효성 검사 (정규식)
         if (!NICKNAME_PATTERN.matcher(nickname).matches()) {
-            throw new UserException(UserErrorCode._NICKNAME_INVALID);
+            throw new GeneralException(ErrorStatus._NICKNAME_INVALID);
         }
 
         // 3. 중복 검사 (DB에 이미 저장된 닉네임인 경우)
@@ -78,11 +76,11 @@ public class UserService {
 
         // 1. 유저 조회
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserException(UserErrorCode._USER_NOT_FOUND));
+                .orElseThrow(() -> new GeneralException(ErrorStatus._MEMBER_NOT_FOUND));
 
         // 2. 닉네임 중복 재검사 (안전장치)
         if (checkNicknameDuplication(request.getNickname())) {
-            throw new UserException(UserErrorCode._NICKNAME_CONFLICT);
+            throw new GeneralException(ErrorStatus._NICKNAME_CONFLICT);
         }
 
         // 3. 닉네임 업데이트 및 권한 승격 (GUEST -> USER)
@@ -123,7 +121,7 @@ public class UserService {
     // MY 심터 프로필 정보 조회 (프로필 사진, 닉네임)
     public UserProfileResponse getUserProfile(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserException(UserErrorCode._USER_NOT_FOUND));
+                .orElseThrow(() -> new GeneralException(ErrorStatus._MEMBER_NOT_FOUND));
 
         // 프로필 이미지는 현재 null (추후 구현)
         return UserProfileResponse.of(user.getNickname(), null);
@@ -133,11 +131,11 @@ public class UserService {
     @Transactional
     public UserProfileResponse updateNickname(Long userId, UpdateNicknameRequest request) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserException(UserErrorCode._USER_NOT_FOUND));
+                .orElseThrow(() -> new GeneralException(ErrorStatus._MEMBER_NOT_FOUND));
 
         // 닉네임 중복 검사
         if (checkNicknameDuplication(request.getNickname())) {
-            throw new UserException(UserErrorCode._NICKNAME_CONFLICT);
+            throw new GeneralException(ErrorStatus._NICKNAME_CONFLICT);
         }
 
         // 닉네임 업데이트
@@ -149,7 +147,7 @@ public class UserService {
     // 환경설정 토글 상태 및 앱 버전 조회
     public UserSettingsResponse getUserSettings(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserException(UserErrorCode._USER_NOT_FOUND));
+                .orElseThrow(() -> new GeneralException(ErrorStatus._MEMBER_NOT_FOUND));
 
         // UserSettings 조회 (없으면 기본값으로 생성)
         UserSettings settings = userSettingsRepository.findByUser_Id(userId)
@@ -168,7 +166,7 @@ public class UserService {
     @Transactional
     public UserSettingsResponse updateUserSettings(Long userId, UpdateUserSettingsRequest request) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserException(UserErrorCode._USER_NOT_FOUND));
+                .orElseThrow(() -> new GeneralException(ErrorStatus._MEMBER_NOT_FOUND));
 
         UserSettings settings = userSettingsRepository.findByUser_Id(userId)
                 .orElseGet(() -> createDefaultSettings(user));
@@ -207,7 +205,7 @@ public class UserService {
     // AI 상담사 설정 조회
     public CounselorSettingsResponse getCounselorSettings(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserException(UserErrorCode._USER_NOT_FOUND));
+                .orElseThrow(() -> new GeneralException(ErrorStatus._MEMBER_NOT_FOUND));
 
         CounselorSettings settings = counselorSettingRepository.findById(userId)
                 .orElseThrow(() -> new CounselException(CounselErrorCode._COUNSELOR_NOT_FOUND));
@@ -224,7 +222,7 @@ public class UserService {
     @Transactional
     public CounselorSettingsResponse updateCounselorSettings(Long userId, UpdateCounselorSettingsRequest request) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserException(UserErrorCode._USER_NOT_FOUND));
+                .orElseThrow(() -> new GeneralException(ErrorStatus._MEMBER_NOT_FOUND));
 
         CounselorSettings settings = counselorSettingRepository.findById(userId)
                 .orElseThrow(() -> new CounselException(CounselErrorCode._COUNSELOR_NOT_FOUND));
@@ -251,7 +249,7 @@ public class UserService {
     // 완료한 미션 리스트 조회
     public MissionHistoryResponse.MissionListResponse getCompletedMissions(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserException(UserErrorCode._USER_NOT_FOUND));
+                .orElseThrow(() -> new GeneralException(ErrorStatus._MEMBER_NOT_FOUND));
 
         List<UserMissions> completedMissions = userMissionRepository
                 .findByUserAndIsCompletedTrueOrderByCompletedAtDesc(user);
@@ -277,10 +275,10 @@ public class UserService {
     // 특정 미션 상세 조회
     public MissionHistoryResponse.MissionDetailResponse getMissionDetail(Long userId, Long userMissionId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserException(UserErrorCode._USER_NOT_FOUND));
+                .orElseThrow(() -> new GeneralException(ErrorStatus._MEMBER_NOT_FOUND));
 
         UserMissions userMission = userMissionRepository.findByUserMissionIdAndUser(userMissionId, user)
-                .orElseThrow(() -> new UserException(UserErrorCode._USER_MISSION_NOT_FOUND));
+                .orElseThrow(() -> new GeneralException(ErrorStatus._USER_MISSION_NOT_FOUND));
 
         // Draft 내용 조회
         String draftContents = draftRepository.findTopByUserMissions(userMission)
@@ -312,15 +310,15 @@ public class UserService {
             List<MultipartFile> images
     ) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserException(UserErrorCode._USER_NOT_FOUND));
+                .orElseThrow(() -> new GeneralException(ErrorStatus._MEMBER_NOT_FOUND));
 
         UserMissions userMission = userMissionRepository.findByUserMissionIdAndUser(userMissionId, user)
-                .orElseThrow(() -> new UserException(UserErrorCode._USER_MISSION_NOT_FOUND));
+                .orElseThrow(() -> new GeneralException(ErrorStatus._USER_MISSION_NOT_FOUND));
 
-        // 1. 내용 수정 (contents가 null이 아니고 비어있지 않으면 수정)
+        // 내용 수정
         if (request.getContents() != null && !request.getContents().trim().isEmpty()) {
             Drafts draft = draftRepository.findTopByUserMissions(userMission)
-                    .orElseThrow(() -> new UserException(UserErrorCode._DRAFT_NOT_FOUND));
+                    .orElseThrow(() -> new GeneralException(ErrorStatus._DRAFT_NOT_FOUND));
             draft.updateContents(request.getContents());
         }
 
