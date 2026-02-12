@@ -44,7 +44,7 @@ public class AttachmentReportsService {
         com.symteo.domain.diagnose.entity.Diagnose diagnose = diagnoseRepository.findById(diagnoseId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus._DIAGNOSE_NOT_FOUND));
 
-        if (!diagnose.getTestType().equals("ATTACHMENT")) {
+        if (diagnose.getTestType() != DiagnoseType.ATTACHMENT_TEST) {
             throw new GeneralException(ErrorStatus._BAD_REQUEST);
         }
 
