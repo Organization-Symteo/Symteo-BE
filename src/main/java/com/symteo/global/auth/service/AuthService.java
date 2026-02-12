@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 /*import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;*/
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 
 @Slf4j
@@ -141,19 +142,28 @@ public class AuthService {
     }*/
 
     @Transactional
-    public AuthResponse login(String provider, String token) {
+    public AuthResponse login(String provider, String accessToken) {
         // provider 검증 -> 400 처리
         if (!isSupportedProvider(provider)) {
             throw new GeneralException(ErrorStatus._INVALID_PROVIDER);
         }
 
-        // 토큰 값 기본 검증 -> 401로 처리(인증 실패)
-        if (token == null || token.isBlank()) {
+        // 토큰 값 기본 검증 -> 401로 처리
+        if ( accessToken== null || accessToken.isBlank()) {
             throw new GeneralException(ErrorStatus._UNAUTHORIZED);
         }
 
         // 1. 소셜 서버에서 사용자 정보(식별자) 가져오기
-        SocialUserInfo socialUser = socialLoadStrategy.getSocialInfo(provider, token);
+        SocialUserInfo socialUser;
+        try {
+            socialUser = socialLoadStrategy.getSocialInfo(provider, accessToken);
+        } catch (WebClientResponseException.Unauthorized e) {
+            // 카카오 토큰 invalid/만료 등 -> 401
+            throw new GeneralException(ErrorStatus._UNAUTHORIZED);
+        } catch (WebClientResponseException e) {
+            // 카카오 서버 오류/기타 4xx/5xx -> 500
+            throw new GeneralException(ErrorStatus._SOCIAL_LOGIN_FAILED);
+        }
 
         // 2. DB 조회 (없으면 회원가입, 있으면 로그인)
         User user = userRepository.findBySocialTypeAndSocialId(socialUser.getSocialType(), socialUser.getSocialId())

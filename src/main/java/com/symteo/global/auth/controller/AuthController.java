@@ -75,7 +75,7 @@ import java.nio.charset.StandardCharsets;*/
         @PathVariable String provider,
         @RequestBody LoginRequest request // { "token": "소셜_액세스_토큰" }
     ) {
-        AuthResponse response = authService.login(provider, request.getToken());
+        AuthResponse response = authService.login(provider, request.getAccessToken());
         return ApiResponse.onSuccess(response);
     }
 
