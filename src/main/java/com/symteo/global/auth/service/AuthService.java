@@ -12,19 +12,19 @@ import com.symteo.global.ApiPayload.status.ErrorStatus;
 import com.symteo.global.jwt.JwtProvider;
 import com.symteo.global.auth.oauth.info.SocialUserInfo;
 import com.symteo.global.auth.oauth.service.SocialLoadStrategy;
-import org.springframework.beans.factory.annotation.Value;
+/*import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.ResponseEntity;*/
 import org.springframework.transaction.annotation.Transactional;
 import com.symteo.domain.user.enums.Role;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
+/*import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;*/
 import org.springframework.web.client.RestTemplate;
 
 
@@ -39,7 +39,7 @@ public class AuthService {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
 
-    @Value("${spring.oauth.google.client-id}") private String googleClientId;
+ /*   @Value("${spring.oauth.google.client-id}") private String googleClientId;
     @Value("${spring.oauth.google.client-secret}") private String googleClientSecret;
     @Value("${spring.oauth.google.redirect-uri}") private String googleRedirectUri;
     @Value("${spring.oauth.kakao.client-id}") private String kakaoClientId;
@@ -138,6 +138,59 @@ public class AuthService {
             log.error("소셜 로그인 토큰 발급 실패: {}", e.getMessage());
             throw new GeneralException(ErrorStatus._SOCIAL_LOGIN_FAILED);
         }
+    }*/
+
+    @Transactional
+    public AuthResponse login(String provider, String accessToken) {
+        // provider 검증 -> 400 처리
+        if (!isSupportedProvider(provider)) {
+            throw new GeneralException(ErrorStatus._INVALID_PROVIDER);
+        }
+
+        // 토큰 값 기본 검증 -> 401로 처리(인증 실패)
+        if (accessToken == null || accessToken.isBlank()) {
+            throw new GeneralException(ErrorStatus._UNAUTHORIZED);
+        }
+
+        // 1. 소셜 서버에서 사용자 정보(식별자) 가져오기
+        SocialUserInfo socialUser = socialLoadStrategy.getSocialInfo(provider, accessToken);
+
+        // 2. DB 조회 (없으면 회원가입, 있으면 로그인)
+        User user = userRepository.findBySocialTypeAndSocialId(socialUser.getSocialType(), socialUser.getSocialId())
+                .orElseGet(() -> registerUser(socialUser));
+
+        //탈퇴한지 7일이 지나지 않은 경우
+        if (user.getDeletedAt() != null) {
+            LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
+            if (user.getDeletedAt().isAfter(sevenDaysAgo)) {
+                throw new GeneralException(ErrorStatus._WITHDRAWAL_RESTRICTION);
+            }
+        }
+
+        // 3. 앱 전용 토큰(JWT) 발급
+        String appAccessToken = jwtProvider.createAccessToken(user.getId(), user.getRole());
+        String appRefreshToken = jwtProvider.createRefreshToken(user.getId());
+
+        // 4. Refresh Token 저장
+        saveRefreshToken(user, appRefreshToken);
+
+        // 5. 응답 생성
+        return AuthResponse.builder()
+                .accessToken(appAccessToken)
+                .refreshToken(appRefreshToken)
+                .isRegistered(user.getRole() == Role.USER) // USER면 가입완료, GUEST면 미완료
+                .userId(user.getId())
+                .nickname(user.getNickname())
+                .build();
+
+    }
+
+    private boolean isSupportedProvider(String provider) {
+        return provider != null && (
+                provider.equalsIgnoreCase("kakao")
+                        || provider.equalsIgnoreCase("naver")
+                        || provider.equalsIgnoreCase("google")
+        );
     }
 
     // 신규 유저 저장 (GUEST 권한)
