@@ -141,19 +141,19 @@ public class AuthService {
     }*/
 
     @Transactional
-    public AuthResponse login(String provider, String accessToken) {
+    public AuthResponse login(String provider, String token) {
         // provider 검증 -> 400 처리
         if (!isSupportedProvider(provider)) {
             throw new GeneralException(ErrorStatus._INVALID_PROVIDER);
         }
 
         // 토큰 값 기본 검증 -> 401로 처리(인증 실패)
-        if (accessToken == null || accessToken.isBlank()) {
+        if (token == null || token.isBlank()) {
             throw new GeneralException(ErrorStatus._UNAUTHORIZED);
         }
 
         // 1. 소셜 서버에서 사용자 정보(식별자) 가져오기
-        SocialUserInfo socialUser = socialLoadStrategy.getSocialInfo(provider, accessToken);
+        SocialUserInfo socialUser = socialLoadStrategy.getSocialInfo(provider, token);
 
         // 2. DB 조회 (없으면 회원가입, 있으면 로그인)
         User user = userRepository.findBySocialTypeAndSocialId(socialUser.getSocialType(), socialUser.getSocialId())
