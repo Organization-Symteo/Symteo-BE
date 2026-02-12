@@ -1,0 +1,1 @@
+ALTER TABLE today_lines ADD COLUMN created_at DATETIME;
