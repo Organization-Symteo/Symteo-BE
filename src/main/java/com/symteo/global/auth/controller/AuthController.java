@@ -3,22 +3,28 @@ package com.symteo.global.auth.controller;
 import com.symteo.global.ApiPayload.ApiResponse;
 import com.symteo.global.auth.dto.*;
 import com.symteo.global.auth.service.AuthService;
-import io.swagger.v3.oas.annotations.Parameter;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
+/*import org.springframework.http.ResponseEntity;
+import io.swagger.v3.oas.annotations.Parameter;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;*/
+
+/*import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
+import java.nio.charset.StandardCharsets;*/
 
+@Slf4j
 @RestController
     @RequestMapping("/api/v1/auth")
     @RequiredArgsConstructor
     public class AuthController {
         private final AuthService authService;
 
+/*
         // 1. 소셜 로그인
         @GetMapping("/login/oauth2/code/{provider}")
         public void callback(
@@ -26,8 +32,11 @@ import java.nio.charset.StandardCharsets;
                 @PathVariable String provider,
                 @RequestParam("code") String code,
                 @RequestParam(value = "state", required = false) String state,
+                @RequestParam(required = false) String platform,
+                HttpServletRequest request,
                 HttpServletResponse response
         ) throws IOException {
+
             AuthResponse auth = authService.login(provider, code);
 
             String appTargetUrl = "symteo-auth://oauth"
@@ -36,6 +45,8 @@ import java.nio.charset.StandardCharsets;
                     + "&registered=" + auth.isRegistered();
 
             boolean isIos = userAgent != null && (userAgent.contains("iPhone") || userAgent.contains("iPad"));
+
+            log.info("[AUTH][REDIRECT] isIos={}, appTargetUrlPrefix={}", isIos, "symteo-auth://oauth?...");
 
             if (isIos) {
                 // HTML 방식: iOS 사파리 및 인앱 브라우저 대응
@@ -56,6 +67,17 @@ import java.nio.charset.StandardCharsets;
                 response.sendRedirect(appTargetUrl);
             }
         }
+*/
+
+    // 1. 소셜 로그인 (가입/로그인 통합)
+    @PostMapping("/login/{provider}")
+    public ApiResponse<AuthResponse> login(
+        @PathVariable String provider,
+        @RequestBody LoginRequest request // { "token": "소셜_액세스_토큰" }
+    ) {
+        AuthResponse response = authService.login(provider, request.getToken());
+        return ApiResponse.onSuccess(response);
+    }
 
     // 2. 토큰 재발급
     @PostMapping("/refresh")
