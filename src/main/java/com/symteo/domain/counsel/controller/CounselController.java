@@ -45,12 +45,12 @@ public class CounselController {
     }
 
     // AI 상담 종료하기
-    @PatchMapping("{counselId}/summary")
+    @PatchMapping("{chatRoomId}/summary")
     public ApiResponse<CounselResDTO.ChatSummary> summaryAI(
             @AuthenticationPrincipal Long userId,
-            @PathVariable Long counselId
+            @PathVariable Long chatRoomId
     ){
-        return ApiResponse.onSuccess(counselCommandService.summaryCounsel(userId, counselId));
+        return ApiResponse.onSuccess(counselCommandService.summaryCounsel(userId, chatRoomId));
     }
 
     // 전체 상담 조회하기
@@ -63,21 +63,21 @@ public class CounselController {
     }
 
     // 단일 상담 조회하기
-    @GetMapping("/{counselId}")
+    @GetMapping("/{chatRoomId}")
     public ApiResponse<CounselResDTO.ChatSummary> getChat(
             @AuthenticationPrincipal Long userId,
-            @PathVariable Long counselId
+            @PathVariable Long chatRoomId
     ){
-        return ApiResponse.onSuccess(counselQueryService.readChat(userId, counselId));
+        return ApiResponse.onSuccess(counselQueryService.readChat(userId, chatRoomId));
     }
 
     // 상담 삭제하기
-    @DeleteMapping("/{counselId}")
+    @DeleteMapping("/{chatRoomId}")
     public ApiResponse<Long> deleteChat(
             @AuthenticationPrincipal Long userId,
-            @PathVariable Long counselId
+            @PathVariable Long chatRoomId
     ){
-        return ApiResponse.onSuccess(counselCommandService.deleteChat(userId, counselId));
+        return ApiResponse.onSuccess(counselCommandService.deleteChat(userId, chatRoomId));
     }
 
     // 상담사 초기 설정 저장
