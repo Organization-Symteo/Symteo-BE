@@ -214,7 +214,8 @@ public class UserService {
                 settings.getAtmosphere(),
                 settings.getSupportStyle(),
                 settings.getRoleCounselor(),
-                settings.getAnswerFormat()
+                settings.getAnswerFormat(),
+                settings.getTone()
         );
     }
 
@@ -231,7 +232,8 @@ public class UserService {
                 request.getAtmosphere() != null ? request.getAtmosphere() : settings.getAtmosphere(),
                 request.getSupportStyle() != null ? request.getSupportStyle() : settings.getSupportStyle(),
                 request.getRoleCounselor() != null ? request.getRoleCounselor() : settings.getRoleCounselor(),
-                request.getAnswerFormat() != null ? request.getAnswerFormat() : settings.getAnswerFormat()
+                request.getAnswerFormat() != null ? request.getAnswerFormat() : settings.getAnswerFormat(),
+                request.getTone() != null ? request.getTone() : settings.getTone()
         );
 
         counselorSettingRepository.save(settings);
@@ -240,7 +242,8 @@ public class UserService {
                 settings.getAtmosphere(),
                 settings.getSupportStyle(),
                 settings.getRoleCounselor(),
-                settings.getAnswerFormat()
+                settings.getAnswerFormat(),
+                settings.getTone()
         );
     }
 

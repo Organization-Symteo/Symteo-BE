@@ -75,7 +75,7 @@ public class CounselCommandServiceImpl implements CounselCommandService{
                         "support_style", settings.getSupportStyle(),
                         "role", settings.getRoleCounselor(),
                         "answer_format", settings.getAnswerFormat().getPromptText(),
-                        "tone", settings.getTone()
+                        "tone", settings.getTone().getPromptText()
                 ));
 
         // 3) AI 호출
