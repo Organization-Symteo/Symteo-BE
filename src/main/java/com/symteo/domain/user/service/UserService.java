@@ -21,8 +21,6 @@ import com.symteo.domain.user.exception.UserException;
 import com.symteo.domain.user.repository.UserRepository;
 import com.symteo.domain.user.repository.UserSettingsRepository;
 
-import com.symteo.global.ApiPayload.exception.GeneralException;
-import com.symteo.global.ApiPayload.status.ErrorStatus;
 import com.symteo.global.jwt.JwtProvider;
 import com.symteo.global.s3.S3Service;
 import lombok.RequiredArgsConstructor;
@@ -209,7 +207,7 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(UserErrorCode._USER_NOT_FOUND));
 
-        CounselorSettings settings = counselorSettingRepository.findById(userId)
+        CounselorSettings settings = counselorSettingRepository.findByUser(user)
                 .orElseThrow(() -> new CounselException(CounselErrorCode._COUNSELOR_NOT_FOUND));
 
         return CounselorSettingsResponse.of(
@@ -226,25 +224,23 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(UserErrorCode._USER_NOT_FOUND));
 
-        CounselorSettings settings = counselorSettingRepository.findById(userId)
+        CounselorSettings settings = counselorSettingRepository.findByUser(user)
                 .orElseThrow(() -> new CounselException(CounselErrorCode._COUNSELOR_NOT_FOUND));
 
-        // 엔티티에 업데이트 메서드x -> 새로 생성해서 저장하기...
-        CounselorSettings updatedSettings = CounselorSettings.builder()
-                .user(user)
-                .atmosphere(request.getAtmosphere() != null ? request.getAtmosphere() : settings.getAtmosphere())
-                .supportStyle(request.getSupportStyle() != null ? request.getSupportStyle() : settings.getSupportStyle())
-                .roleCounselor(request.getRoleCounselor() != null ? request.getRoleCounselor() : settings.getRoleCounselor())
-                .answerFormat(request.getAnswerFormat() != null ? request.getAnswerFormat() : settings.getAnswerFormat())
-                .build();
+        settings.update(
+                request.getAtmosphere() != null ? request.getAtmosphere() : settings.getAtmosphere(),
+                request.getSupportStyle() != null ? request.getSupportStyle() : settings.getSupportStyle(),
+                request.getRoleCounselor() != null ? request.getRoleCounselor() : settings.getRoleCounselor(),
+                request.getAnswerFormat() != null ? request.getAnswerFormat() : settings.getAnswerFormat()
+        );
 
-        counselorSettingRepository.save(updatedSettings);
+        counselorSettingRepository.save(settings);
 
         return CounselorSettingsResponse.of(
-                updatedSettings.getAtmosphere(),
-                updatedSettings.getSupportStyle(),
-                updatedSettings.getRoleCounselor(),
-                updatedSettings.getAnswerFormat()
+                settings.getAtmosphere(),
+                settings.getSupportStyle(),
+                settings.getRoleCounselor(),
+                settings.getAnswerFormat()
         );
     }
 
@@ -317,7 +313,7 @@ public class UserService {
         UserMissions userMission = userMissionRepository.findByUserMissionIdAndUser(userMissionId, user)
                 .orElseThrow(() -> new UserException(UserErrorCode._USER_MISSION_NOT_FOUND));
 
-        // 1. 내용 수정 (contents가 null이 아니고 비어있지 않으면 수정)
+        // 내용 수정
         if (request.getContents() != null && !request.getContents().trim().isEmpty()) {
             Drafts draft = draftRepository.findTopByUserMissions(userMission)
                     .orElseThrow(() -> new UserException(UserErrorCode._DRAFT_NOT_FOUND));
