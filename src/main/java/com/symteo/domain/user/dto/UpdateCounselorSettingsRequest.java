@@ -4,6 +4,7 @@ import com.symteo.domain.counsel.enums.Answer_Format;
 import com.symteo.domain.counsel.enums.Atmosphere;
 import com.symteo.domain.counsel.enums.Counselor_Role;
 import com.symteo.domain.counsel.enums.Support_Style;
+import com.symteo.domain.counsel.enums.Tone;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,5 +17,6 @@ public class UpdateCounselorSettingsRequest {
     private Support_Style supportStyle;
     private Counselor_Role roleCounselor;
     private Answer_Format answerFormat;
+    private Tone tone;
 }
 
