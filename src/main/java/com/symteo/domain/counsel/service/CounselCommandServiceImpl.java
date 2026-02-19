@@ -71,9 +71,9 @@ public class CounselCommandServiceImpl implements CounselCommandService{
         // 2-1) 프롬프트 로딩 => Resources 폴더에 존재
         String systemText = new SystemPromptTemplate(askCounselPrompt)
                 .render(Map.of(
-                        "atmosphere", settings.getAtmosphere(),
-                        "support_style", settings.getSupportStyle(),
-                        "role", settings.getRoleCounselor(),
+                        "atmosphere", settings.getAtmosphere().getPromptText(),
+                        "support_style", settings.getSupportStyle().getPromptText(),
+                        "role", settings.getRoleCounselor().getPromptText(),
                         "answer_format", settings.getAnswerFormat().getPromptText(),
                         "tone", settings.getTone().getPromptText()
                 ));
