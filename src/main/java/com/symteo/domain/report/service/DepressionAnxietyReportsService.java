@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Service
@@ -71,7 +72,13 @@ public class DepressionAnxietyReportsService {
         // AI 통합 분석문 생성
         String dePrompt = buildDepressionPrompt(user.getNickname(), deReport, answers);
         String anPrompt = buildAnxietyPrompt(user.getNickname(), anReport, answers);
-        String finalAiContents = aiModelService.callAiApi(dePrompt) + "||" + aiModelService.callAiApi(anPrompt);
+
+        // 비동기 요청으로 요청 시간 단축(전형진)
+        CompletableFuture<String> depressionTask = CompletableFuture.supplyAsync(() -> aiModelService.callAiApi(dePrompt));
+        CompletableFuture<String> anxietyTask = CompletableFuture.supplyAsync(() -> aiModelService.callAiApi(anPrompt));
+
+        String finalAiContents = depressionTask.thenCombine(anxietyTask, (deResult, anResult) ->
+                deResult + "||" + anResult).join();
 
         aiReportsRepository.save(DiagnoseAiReports.builder()
                 .user(user).report(report).aiContents(finalAiContents).build());
