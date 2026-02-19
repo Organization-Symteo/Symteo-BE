@@ -207,7 +207,7 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(UserErrorCode._USER_NOT_FOUND));
 
-        CounselorSettings settings = counselorSettingRepository.findById(userId)
+        CounselorSettings settings = counselorSettingRepository.findByUser(user)
                 .orElseThrow(() -> new CounselException(CounselErrorCode._COUNSELOR_NOT_FOUND));
 
         return CounselorSettingsResponse.of(
@@ -224,25 +224,23 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(UserErrorCode._USER_NOT_FOUND));
 
-        CounselorSettings settings = counselorSettingRepository.findById(userId)
+        CounselorSettings settings = counselorSettingRepository.findByUser(user)
                 .orElseThrow(() -> new CounselException(CounselErrorCode._COUNSELOR_NOT_FOUND));
 
-        // 엔티티에 업데이트 메서드x -> 새로 생성해서 저장하기...
-        CounselorSettings updatedSettings = CounselorSettings.builder()
-                .user(user)
-                .atmosphere(request.getAtmosphere() != null ? request.getAtmosphere() : settings.getAtmosphere())
-                .supportStyle(request.getSupportStyle() != null ? request.getSupportStyle() : settings.getSupportStyle())
-                .roleCounselor(request.getRoleCounselor() != null ? request.getRoleCounselor() : settings.getRoleCounselor())
-                .answerFormat(request.getAnswerFormat() != null ? request.getAnswerFormat() : settings.getAnswerFormat())
-                .build();
+        settings.update(
+                request.getAtmosphere() != null ? request.getAtmosphere() : settings.getAtmosphere(),
+                request.getSupportStyle() != null ? request.getSupportStyle() : settings.getSupportStyle(),
+                request.getRoleCounselor() != null ? request.getRoleCounselor() : settings.getRoleCounselor(),
+                request.getAnswerFormat() != null ? request.getAnswerFormat() : settings.getAnswerFormat()
+        );
 
-        counselorSettingRepository.save(updatedSettings);
+        counselorSettingRepository.save(settings);
 
         return CounselorSettingsResponse.of(
-                updatedSettings.getAtmosphere(),
-                updatedSettings.getSupportStyle(),
-                updatedSettings.getRoleCounselor(),
-                updatedSettings.getAnswerFormat()
+                settings.getAtmosphere(),
+                settings.getSupportStyle(),
+                settings.getRoleCounselor(),
+                settings.getAnswerFormat()
         );
     }
 

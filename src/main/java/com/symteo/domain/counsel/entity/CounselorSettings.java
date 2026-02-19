@@ -41,4 +41,11 @@ public class CounselorSettings {
     @Enumerated(EnumType.STRING)
     private Tone tone;
 
+    public void update(Atmosphere atmosphere, Support_Style supportStyle, Counselor_Role roleCounselor, Answer_Format answerFormat) {
+        this.atmosphere = atmosphere;
+        this.supportStyle = supportStyle;
+        this.roleCounselor = roleCounselor;
+        this.answerFormat = answerFormat;
+    }
+
 }
