@@ -21,7 +21,7 @@ public class CounselReqDTO {
 
     // 상담 중 리포트 불러오기
     public record ChatReport(
-            @NotNull(message = "채팅방 ID는 필수입니다.") Long chatRoomId,
+            Long chatRoomId,
             @NotNull(message = "리포트 타입은 필수입니다.") DiagnoseType reportType,
             @NotNull(message = "리포트 ID는 필수입니다.") Long reportId
     ){}
