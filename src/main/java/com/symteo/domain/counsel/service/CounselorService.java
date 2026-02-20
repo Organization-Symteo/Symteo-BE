@@ -22,11 +22,7 @@ public class CounselorService {
     private final UserRepository userRepository;
 
     public Long saveSettings(Long userId, CounselorSettingReqDTO.CounselorSetting request) {
-
-        // 1. 이미 설정한 적이 있는지 검사
-        if (counselorSettingRepository.existsById(userId)) {
-            throw new CounselException(CounselErrorCode._COUNSELOR_ALREADY_EXISTS);
-        }
+        
 
         // 2.유저 객체 조회
         User user = userRepository.findById(userId)
